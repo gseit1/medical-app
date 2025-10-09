@@ -16,14 +16,20 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 const allowedOrigins = [
-  // Development
+  // Development - Local development servers
   'http://localhost:3000',
   'https://localhost:3000',
-  'http://192.168.1.2:3000',
-  'https://192.168.1.2:3000',
+  'http://localhost:5173',  // Vite default port
+  'https://localhost:5173',
   'http://127.0.0.1:3000',
   'https://127.0.0.1:3000',
-  // Production - replace with your actual Netlify URL
+  'http://127.0.0.1:5173',
+  'https://127.0.0.1:5173',
+  'http://192.168.1.2:3000',
+  'https://192.168.1.2:3000',
+  'http://192.168.1.2:5173',
+  'https://192.168.1.2:5173',
+  // Production - Netlify URLs
   'https://clinical.netlify.app',
   'https://lustrous-cupcake-b72349.netlify.app',
   'https://clinical-medical-app.netlify.app'
@@ -34,13 +40,25 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+    // Development mode - allow all origins
+    if (process.env.NODE_ENV === 'development') {
+      return callback(null, true);
+    }
+    
+    // Production mode - check specific origins
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else if (origin && origin.includes('.netlify.app')) {
+      // Allow any .netlify.app subdomain
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn('CORS blocked origin:', origin);
+      callback(new Error(`CORS policy: Origin ${origin} is not allowed`));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
