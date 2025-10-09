@@ -32,7 +32,8 @@ const allowedOrigins = [
   // Production - Netlify URLs
   'https://clinical.netlify.app',
   'https://lustrous-cupcake-b72349.netlify.app',
-  'https://clinical-medical-app.netlify.app'
+  'https://clinical-medical-app.netlify.app',
+  'https://medicalbarcode.netlify.app'
 ];
 
 app.use(cors({

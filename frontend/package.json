@@ -17,6 +17,7 @@
     "@zxing/library": "^0.21.3",
     "axios": "^1.6.2",
     "bootstrap": "^5.3.2",
+    "bootstrap-icons": "^1.13.1",
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.12.1",
     "pinia": "^2.1.7",
