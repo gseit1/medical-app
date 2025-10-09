@@ -144,6 +144,9 @@ const urlBarcodes = ref([])
 const loading = ref(true)
 const error = ref(null)
 
+// Get frontend URL from environment variables
+const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || window.location.origin
+
 // Fetch all patients and their medical instructions
 const fetchAllData = async () => {
   try {
@@ -171,7 +174,7 @@ const fetchAllData = async () => {
             patient: patient.full_name,
             description: instruction.description,
             status: instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή',
-            url: `http://192.168.1.2:3000/verify/${patient.id}/${instruction.id}`
+            url: `${FRONTEND_URL}/verify/${patient.id}/${instruction.id}`
           })
           
           // Sample instruction data for traditional barcodes
