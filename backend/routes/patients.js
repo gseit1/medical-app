@@ -4,8 +4,8 @@ const {
   getAllPatients,
   getAllPatientsWithInstructions,
   getPatientById,
-  createPatient,
-  getPatientPublicInfo
+  getPatientPublicById,
+  createPatient
 } = require('../controllers/patientController_mongo');
 const {
   authenticateToken,
@@ -26,6 +26,6 @@ router.get('/:id', authenticateToken, authorizePatientAccess, getPatientById);
 router.post('/', authenticateToken, requireNurse, createPatient);
 
 // GET /api/patients/:id/public - Get basic patient info (public access for barcode verification)
-router.get('/:id/public', getPatientPublicInfo);
+router.get('/:id/public', getPatientPublicById);
 
 module.exports = router;

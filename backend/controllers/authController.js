@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/database');
+const { User } = require('../models');
 require('dotenv').config();
 
 // Login controller
@@ -18,17 +18,12 @@ const login = async (req, res) => {
 
     console.log('✓ Searching for user:', username);
     // Find user in database
-    const [users] = await pool.query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
-    );
+    const user = await User.findOne({ username });
 
-    if (users.length === 0) {
+    if (!user) {
       console.log('❌ User not found');
       return res.status(401).json({ message: 'Invalid credentials' });
     }
-
-    const user = users[0];
     console.log('✓ User found:', { id: user.id, username: user.username, role: user.role });
 
     // Compare passwords
@@ -45,7 +40,7 @@ const login = async (req, res) => {
     // Generate JWT token
     const token = jwt.sign(
       {
-        id: user.id,
+        id: user._id,
         username: user.username,
         role: user.role,
         patient_id: user.patient_id
@@ -62,7 +57,7 @@ const login = async (req, res) => {
       message: 'Login successful',
       token,
       user: {
-        id: user.id,
+        id: user._id,
         username: user.username,
         role: user.role,
         patient_id: user.patient_id
@@ -86,27 +81,28 @@ const register = async (req, res) => {
     }
 
     // Check if user already exists
-    const [existingUsers] = await pool.query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
-    );
+    const existingUser = await User.findOne({ username });
 
-    if (existingUsers.length > 0) {
+    if (existingUser) {
       return res.status(400).json({ message: 'Username already exists' });
     }
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert new user
-    const [result] = await pool.query(
-      'INSERT INTO users (username, password, role, patient_id) VALUES (?, ?, ?, ?)',
-      [username, hashedPassword, role, patient_id || null]
-    );
+    // Create new user
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      role,
+      patient_id: patient_id || null
+    });
+
+    const savedUser = await newUser.save();
 
     res.status(201).json({
       message: 'User created successfully',
-      userId: result.insertId
+      userId: savedUser._id
     });
 
   } catch (error) {

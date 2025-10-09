@@ -159,9 +159,52 @@ const getPatientPublicById = async (req, res) => {
   }
 };
 
+// Create a new patient (for testing/admin purposes)
+const createPatient = async (req, res) => {
+  try {
+    const { full_name, amka, afm, blood_type } = req.body;
+    
+    // Validate required fields
+    if (!full_name || !amka) {
+      return res.status(400).json({ message: 'Full name and AMKA are required' });
+    }
+    
+    // Check if patient with same AMKA already exists
+    const existingPatient = await Patient.findOne({ amka });
+    if (existingPatient) {
+      return res.status(409).json({ message: 'Patient with this AMKA already exists' });
+    }
+    
+    const newPatient = new Patient({
+      full_name,
+      amka,
+      afm: afm || null,
+      blood_type: blood_type || null
+    });
+    
+    const savedPatient = await newPatient.save();
+    
+    res.status(201).json({
+      message: 'Patient created successfully',
+      patient: {
+        id: savedPatient._id,
+        full_name: savedPatient.full_name,
+        amka: savedPatient.amka,
+        afm: savedPatient.afm,
+        blood_type: savedPatient.blood_type,
+        created_at: savedPatient.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Create patient error:', error);
+    res.status(500).json({ message: 'Server error creating patient' });
+  }
+};
+
 module.exports = {
   getAllPatients,
   getAllPatientsWithInstructions,
   getPatientById,
-  getPatientPublicById
+  getPatientPublicById,
+  createPatient
 };
