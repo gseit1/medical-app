@@ -1,8 +1,12 @@
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const cors = require('cors');
 require('dotenv').config();
 
-const { testConnection } = require('./config/database');
+// MongoDB Configuration
+const { connectDB } = require('./config/database_mongo');
 const authRoutes = require('./routes/auth');
 const patientRoutes = require('./routes/patients');
 const instructionRoutes = require('./routes/instructions');
@@ -11,9 +15,39 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = [
+  // Development
+  'http://localhost:3000',
+  'https://localhost:3000',
+  'http://192.168.1.2:3000',
+  'https://192.168.1.2:3000',
+  'http://127.0.0.1:3000',
+  'https://127.0.0.1:3000',
+  // Production - replace with your actual Netlify URL
+  'https://clinical.netlify.app',
+  'https://YOUR_NETLIFY_SITE_NAME.netlify.app'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Security middleware for production
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Set UTF-8 charset for all responses
 app.use((req, res, next) => {
@@ -21,8 +55,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// Test database connection
-testConnection();
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    database: 'MongoDB Atlas',
+    service: 'Clinical Medical App Backend'
+  });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -51,11 +93,65 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-  console.log(`📱 Network: http://192.168.1.2:${PORT}`);
-  console.log(`📚 API documentation available at http://localhost:${PORT}`);
-});
+// HTTPS Server setup
+const startServer = () => {
+  try {
+    // Try to use SSL certificates
+    const keyPath = path.join(__dirname, 'cert.key');
+    const certPath = path.join(__dirname, 'cert.crt');
+    
+    if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
+      // HTTPS Server
+      const httpsOptions = {
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath)
+      };
+      
+      https.createServer(httpsOptions, app).listen(PORT, '0.0.0.0', () => {
+        console.log(`🚀 HTTPS Backend API Server is running on:`);
+        console.log(`   Local:   https://localhost:${PORT}`);
+        console.log(`   Network: https://192.168.1.2:${PORT}`);
+        console.log(`� SSL Certificates loaded successfully`);
+      });
+    } else {
+      throw new Error('SSL certificates not found');
+    }
+  } catch (error) {
+    console.log('⚠️  Could not start HTTPS server:', error.message);
+    console.log('⚠️  Starting HTTP server instead...');
+    
+    // Fallback to HTTP
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 HTTP Backend API Server is running on:`);
+      console.log(`   Local:   http://localhost:${PORT}`);
+      console.log(`   Network: http://192.168.1.2:${PORT}`);
+      console.log(`⚠️  Consider setting up SSL certificates for HTTPS`);
+    });
+  }
+};
+
+// Initialize MongoDB and start server
+const initializeApp = async () => {
+  try {
+    // Connect to MongoDB
+    await connectDB();
+    console.log('✅ MongoDB Connected Successfully');
+    
+    // Start HTTP server for development (simplified)
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`🚀 Backend API Server is running on:`);
+      console.log(`   Local:   http://localhost:${PORT}`);
+      console.log(`   Network: http://192.168.1.2:${PORT}`);
+      console.log(`📱 Ready for network access and QR code scanning`);
+      console.log(`🍃 Using MongoDB Atlas Database`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error.message);
+    process.exit(1);
+  }
+};
+
+// Start the application
+initializeApp();
 
 module.exports = app;

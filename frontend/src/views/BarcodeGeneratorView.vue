@@ -13,128 +13,266 @@
           <i class="bi bi-info-circle"></i>
           <strong>Οδηγίες:</strong> Εκτυπώστε αυτή τη σελίδα ή εμφανίστε τα barcodes σε άλλη οθόνη και σαρώστε τα με την κάμερα του τηλεφώνου σας.
         </div>
-      </div>
-    </div>
 
-    <div class="row g-4">
-      <div
-        v-for="instruction in sampleInstructions"
-        :key="instruction.barcode"
-        class="col-md-6 col-lg-4"
-      >
-        <div class="card h-100">
-          <div class="card-body text-center">
-            <h6 class="card-title mb-3">{{ instruction.patient }}</h6>
-            <p class="small text-muted mb-3">{{ instruction.description }}</p>
-            
-            <!-- Barcode using SVG -->
-            <svg
-              :id="'barcode-' + instruction.barcode"
-              class="barcode-svg mb-2"
-            ></svg>
-            
-            <code class="d-block mb-2">{{ instruction.barcode }}</code>
-            
-            <span
-              class="badge"
-              :class="instruction.status === 'Ολοκληρωμένη' ? 'bg-success' : 'bg-warning text-dark'"
+        <!-- Loading State -->
+        <div v-if="loading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Φόρτωση...</span>
+          </div>
+          <p class="mt-3">Φόρτωση barcodes...</p>
+        </div>
+
+        <!-- Error State -->
+        <div v-else-if="error" class="alert alert-danger">
+          <i class="bi bi-exclamation-triangle"></i>
+          {{ error }}
+        </div>
+
+        <!-- Content -->
+        <div v-else>
+          <!-- URL Barcodes Section -->
+        <div class="mb-5">
+          <h3 class="mb-3">
+            <i class="bi bi-link-45deg"></i> URL Barcodes (Νέο Σύστημα)
+          </h3>
+          <div class="alert alert-success">
+            <i class="bi bi-phone"></i>
+            <strong>Σκαναρίστε με την κάμερα του τηλεφώνου:</strong> Αυτά τα barcodes περιέχουν URLs που ανοίγουν αυτόματα στον browser και εμφανίζουν το αποτέλεσμα επαλήθευσης.
+          </div>
+          
+          <div class="row g-4">
+            <div
+              v-for="urlBarcode in urlBarcodes"
+              :key="urlBarcode.url"
+              class="col-md-6 col-lg-4"
             >
-              {{ instruction.status }}
-            </span>
+              <div class="card h-100 border-success">
+                <div class="card-body text-center">
+                  <h6 class="card-title mb-3 text-success">{{ urlBarcode.patient }}</h6>
+                  <p class="small text-muted mb-3">{{ urlBarcode.description }}</p>
+                  
+                  <!-- URL Barcode using QR Code -->
+                  <div
+                    :id="'qr-' + urlBarcode.patientId + '-' + urlBarcode.instructionId"
+                    class="qr-code mb-3"
+                  ></div>
+                  
+                  <code class="d-block mb-2 small">{{ urlBarcode.url }}</code>
+                  
+                  <span
+                    class="badge"
+                    :class="urlBarcode.status === 'Ολοκληρωμένη' ? 'bg-success' : 'bg-warning text-dark'"
+                  >
+                    {{ urlBarcode.status }}
+                  </span>
+
+                  <div class="mt-2">
+                    <small class="text-muted d-block">Patient ID: {{ urlBarcode.patientId }}</small>
+                    <small class="text-muted d-block">Instruction ID: {{ urlBarcode.instructionId }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="row mt-4">
-      <div class="col-12 text-center no-print">
-        <button class="btn btn-primary btn-lg" @click="printBarcodes">
-          <i class="bi bi-printer"></i> Εκτύπωση Barcodes
-        </button>
-        <router-link to="/patients" class="btn btn-secondary btn-lg ms-2">
-          <i class="bi bi-arrow-left"></i> Επιστροφή
-        </router-link>
+        <!-- Traditional Barcode Section -->
+        <div class="mb-5">
+          <h3 class="mb-3">
+            <i class="bi bi-upc"></i> Παραδοσιακά Barcodes
+          </h3>
+          
+          <div class="row g-4">
+            <div
+              v-for="instruction in sampleInstructions"
+              :key="instruction.barcode"
+              class="col-md-6 col-lg-4"
+            >
+              <div class="card h-100">
+                <div class="card-body text-center">
+                  <h6 class="card-title mb-3">{{ instruction.patient }}</h6>
+                  <p class="small text-muted mb-3">{{ instruction.description }}</p>
+                  
+                  <!-- Barcode using SVG -->
+                  <svg
+                    :id="'barcode-' + instruction.barcode"
+                    class="barcode-svg mb-2"
+                  ></svg>
+                  
+                  <code class="d-block mb-2">{{ instruction.barcode }}</code>
+                  
+                  <span
+                    class="badge"
+                    :class="instruction.status === 'Ολοκληρωμένη' ? 'bg-success' : 'bg-warning text-dark'"
+                  >
+                    {{ instruction.status }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+          <div class="row mt-4">
+            <div class="col-12 text-center no-print">
+              <button class="btn btn-primary btn-lg" @click="printBarcodes">
+                <i class="bi bi-printer"></i> Εκτύπωση Barcodes
+              </button>
+              <router-link to="/patients" class="btn btn-secondary btn-lg ms-2">
+                <i class="bi bi-arrow-left"></i> Επιστροφή
+              </router-link>
+            </div>
+          </div>
+        </div> <!-- End of v-else content section -->
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import JsBarcode from 'jsbarcode'
+import QRCode from 'qrcode'
+import api from '../services/api'
+import { useAuthStore } from '../stores/auth'
+import { useRouter } from 'vue-router'
 
-const sampleInstructions = [
-  {
-    barcode: 'MED001234567-571',
-    patient: 'Γεώργιος Παπαδόπουλος',
-    description: 'Χορήγηση Αντιβίωσης - Αμοξυκιλλίνη 500mg',
-    status: 'Ολοκληρωμένη'
-  },
-  {
-    barcode: 'MED001234568-589',
-    patient: 'Γεώργιος Παπαδόπουλος',
-    description: 'Μέτρηση Αρτηριακής Πίεσης',
-    status: 'Εκρεμής'
-  },
-  {
-    barcode: 'MED002345678-682',
-    patient: 'Μαρία Ιωάννου',
-    description: 'Ινσουλίνη - 10 μονάδες',
-    status: 'Εκρεμής'
-  },
-  {
-    barcode: 'MED002345679-690',
-    patient: 'Μαρία Ιωάννου',
-    description: 'Έλεγχος Σακχάρου',
-    status: 'Ολοκληρωμένη'
-  },
-  {
-    barcode: 'MED003456789-783',
-    patient: 'Νίκος Κωνσταντίνου',
-    description: 'Φυσιοθεραπεία',
-    status: 'Εκρεμής'
-  },
-  {
-    barcode: 'MED004567890-884',
-    patient: 'Ελένη Δημητρίου',
-    description: 'Αναπνευστική Θεραπεία',
-    status: 'Εκρεμής'
-  },
-  {
-    barcode: 'MED005678901-985',
-    patient: 'Κωνσταντίνος Αντωνίου',
-    description: 'Χορήγηση Παυσίπονου',
-    status: 'Ολοκληρωμένη'
+const authStore = useAuthStore()
+const router = useRouter()
+const sampleInstructions = ref([])
+const urlBarcodes = ref([])
+const loading = ref(true)
+const error = ref(null)
+
+// Fetch all patients and their medical instructions
+const fetchAllData = async () => {
+  try {
+    loading.value = true
+    error.value = null
+    
+    // Get all patients with instructions
+    console.log('Fetching patients with instructions...')
+    const response = await api.get('/patients/with-instructions')
+    const patients = response.data
+    console.log('Patients received:', patients)
+    
+    // Build URL barcodes and sample instructions from real data
+    const urlBarcodesData = []
+    const sampleInstructionsData = []
+    
+    for (const patient of patients) {
+      console.log('Processing patient:', patient.full_name, 'Instructions:', patient.medical_instructions?.length || 0)
+      if (patient.medical_instructions && patient.medical_instructions.length > 0) {
+        patient.medical_instructions.forEach(instruction => {
+          // URL barcode data
+          urlBarcodesData.push({
+            patientId: patient.id,
+            instructionId: instruction.id,
+            patient: patient.full_name,
+            description: instruction.description,
+            status: instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή',
+            url: `http://192.168.1.2:3000/verify/${patient.id}/${instruction.id}`
+          })
+          
+          // Sample instruction data for traditional barcodes
+          sampleInstructionsData.push({
+            barcode: instruction.barcode,
+            patient: patient.full_name,
+            description: instruction.description,
+            status: instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή'
+          })
+        })
+      }
+    }
+    
+    console.log('URL Barcodes generated:', urlBarcodesData.length)
+    console.log('Sample Instructions generated:', sampleInstructionsData.length)
+    
+    urlBarcodes.value = urlBarcodesData
+    sampleInstructions.value = sampleInstructionsData
+    
+  } catch (err) {
+    console.error('Error fetching data:', err)
+    error.value = 'Σφάλμα κατά τη φόρτωση των δεδομένων'
+  } finally {
+    loading.value = false
   }
-]
+}
 
 const generateBarcodes = () => {
-  sampleInstructions.forEach(instruction => {
-    try {
-      JsBarcode(`#barcode-${instruction.barcode}`, instruction.barcode, {
-        format: 'CODE128',
-        width: 2,
-        height: 80,
-        displayValue: false,
-        margin: 10
-      })
-    } catch (error) {
-      console.error('Error generating barcode:', instruction.barcode, error)
-    }
-  })
+  // Wait a bit for DOM to update
+  setTimeout(() => {
+    // Generate traditional barcodes
+    sampleInstructions.value.forEach(instruction => {
+      try {
+        JsBarcode(`#barcode-${instruction.barcode}`, instruction.barcode, {
+          format: 'CODE128',
+          width: 2,
+          height: 80,
+          displayValue: false,
+          margin: 10
+        })
+      } catch (error) {
+        console.error('Error generating barcode:', instruction.barcode, error)
+      }
+    })
+
+    // Generate QR codes for URL barcodes
+    urlBarcodes.value.forEach(async (urlBarcode) => {
+      try {
+        const canvas = document.createElement('canvas')
+        await QRCode.toCanvas(canvas, urlBarcode.url, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          }
+        })
+        
+        const container = document.getElementById(`qr-${urlBarcode.patientId}-${urlBarcode.instructionId}`)
+        if (container) {
+          // Clear existing content first
+          container.innerHTML = ''
+          container.appendChild(canvas)
+        }
+      } catch (error) {
+        console.error('Error generating QR code:', urlBarcode.url, error)
+      }
+    })
+  }, 100)
 }
 
 const printBarcodes = () => {
   window.print()
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Check if user is authenticated and is a nurse
+  if (!authStore.isAuthenticated || !authStore.isNurse) {
+    router.push('/login')
+    return
+  }
+  
+  await fetchAllData()
   generateBarcodes()
 })
 </script>
 
 <style scoped>
 .barcode-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.qr-code {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 150px;
+}
+
+.qr-code canvas {
   max-width: 100%;
   height: auto;
 }

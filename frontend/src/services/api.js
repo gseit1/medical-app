@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+// Production backend URL - update this when you deploy to Render
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${BACKEND_URL}/api`,
   headers: {
     'Content-Type': 'application/json'
   }

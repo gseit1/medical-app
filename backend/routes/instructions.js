@@ -2,14 +2,22 @@ const express = require('express');
 const router = express.Router();
 const {
   verifyBarcode,
+  verifyBarcodeById,
   completeInstruction,
   getInstructionsByPatient,
-  createInstruction
-} = require('../controllers/instructionController');
+  createInstruction,
+  verifySafety
+} = require('../controllers/instructionController_mongo');
 const { authenticateToken, requireNurse } = require('../middleware/auth');
 
 // POST /api/instructions/verify-barcode - Verify barcode for patient
 router.post('/verify-barcode', authenticateToken, verifyBarcode);
+
+// POST /api/instructions/verify-by-id - Verify barcode by instruction ID (public access for URL scanning)
+router.post('/verify-by-id', verifyBarcodeById);
+
+// POST /api/instructions/verify-safety - Safety verification: check if barcode matches patient's medication
+router.post('/verify-safety', authenticateToken, verifySafety);
 
 // PATCH /api/instructions/:id/complete - Mark instruction as completed
 router.patch('/:id/complete', authenticateToken, completeInstruction);

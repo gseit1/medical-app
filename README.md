@@ -34,9 +34,12 @@ A full-stack medical web application for managing patients, medical instructions
 - 🔐 Secure JWT-based authentication
 - 🎨 Responsive Bootstrap 5 design
 - 📱 Mobile-friendly interface
-- 🔍 Barcode verification system
+- 🔍 **Dual barcode verification system**:
+  - 📲 **URL-based QR codes** (scan with phone camera)
+  - 📊 **Traditional barcodes** (scan within the web app)
 - ✅ Real-time status updates
 - 🇬🇷 Greek language support
+- 🌐 **Public verification pages** (no login required for URL scanning)
 
 ## 🔧 Tech Stack
 
@@ -180,6 +183,20 @@ Visit `http://localhost:3000` in your web browser.
 
 ## 📡 API Documentation
 
+### Barcode Verification
+
+#### POST `/api/instructions/verify-by-id` (Public)
+Verify medicine by patient and instruction ID (for URL-based scanning)
+```json
+{
+  "patientId": 1,
+  "instructionId": 2
+}
+```
+
+#### GET `/api/patients/:id/public` (Public)
+Get basic patient information for barcode verification
+
 ### Authentication
 
 #### POST `/api/auth/login`
@@ -256,9 +273,38 @@ Create new medical instruction (nurse only)
 }
 ```
 
-## 📱 Sample Barcodes for Testing
+## 📱 Barcode Verification System
 
-Use these barcodes to test the verification feature:
+### URL-Based Barcodes (Recommended)
+The new system uses QR codes containing URLs that can be scanned with any phone camera:
+
+1. **Generate QR Codes**: Visit the "Γεννήτρια Barcodes" section in the app
+2. **Print QR Codes**: Each QR code contains a URL like `https://clinical.netlify.app/verify/1/2`
+3. **Scan with Phone Camera**: Use your phone's native camera app to scan the QR code
+4. **Automatic Verification**: The URL opens in your browser and shows verification results
+5. **No App Required**: Works with any phone camera that can read QR codes
+
+### Sample URL Barcodes for Testing
+
+**Development Mode (HTTP Network Access):**
+| URL | Patient | Medicine | Status |
+|-----|---------|----------|--------|
+| `http://192.168.1.2:3000/verify/1/1` | Γεώργιος Παπαδόπουλος | Αμοξυκιλλίνη 500mg | Εκρεμής |
+| `http://192.168.1.2:3000/verify/1/2` | Γεώργιος Παπαδόπουλος | Μέτρηση Πίεσης | Εκρεμής |
+| `http://192.168.1.2:3000/verify/2/3` | Μαρία Ιωάννου | Ινσουλίνη 10 μονάδες | Εκρεμής |
+| `http://192.168.1.2:3000/verify/2/4` | Μαρία Ιωάννου | Έλεγχος Σακχάρου | Εκρεμής |
+| `http://192.168.1.2:3000/verify/3/5` | Νίκος Κωνσταντίνου | Παυσίπονο 500mg | Εκρεμής |
+
+**Production Mode:**
+| URL | Patient | Medicine | Status |
+|-----|---------|----------|--------|
+| `https://clinical.netlify.app/verify/1/1` | Γεώργιος Παπαδόπουλος | Αμοξυκιλλίνη 500mg | Εκρεμής |
+| `https://clinical.netlify.app/verify/1/2` | Γεώργιος Παπαδόπουλος | Μέτρηση Πίεσης | Εκρεμής |
+| `https://clinical.netlify.app/verify/2/3` | Μαρία Ιωάννου | Ινσουλίνη 10 μονάδες | Εκρεμής |
+| `https://clinical.netlify.app/verify/2/4` | Μαρία Ιωάννου | Έλεγχος Σακχάρου | Εκρεμής |
+| `https://clinical.netlify.app/verify/3/5` | Νίκος Κωνσταντίνου | Παυσίπονο 500mg | Εκρεμής |
+
+### Traditional Barcodes (Legacy)
 
 | Barcode | Patient | Medicine | Status |
 |---------|---------|----------|--------|

@@ -16,6 +16,40 @@ const getAllPatients = async (req, res) => {
   }
 };
 
+// Get all patients with their medical instructions (for barcode generator)
+const getAllPatientsWithInstructions = async (req, res) => {
+  try {
+    const [patients] = await pool.query(`
+      SELECT id, full_name, amka, afm, blood_type, created_at
+      FROM patients
+      ORDER BY full_name
+    `);
+
+    // Get medical instructions for each patient
+    const patientsWithInstructions = await Promise.all(
+      patients.map(async (patient) => {
+        const [instructions] = await pool.query(
+          `SELECT id, description, barcode, status, created_at, completed_at
+           FROM medical_instructions
+           WHERE patient_id = ?
+           ORDER BY created_at DESC`,
+          [patient.id]
+        );
+        
+        return {
+          ...patient,
+          medical_instructions: instructions
+        };
+      })
+    );
+
+    res.json(patientsWithInstructions);
+  } catch (error) {
+    console.error('Error fetching patients with instructions:', error);
+    res.status(500).json({ message: 'Server error fetching patients with instructions' });
+  }
+};
+
 // Get single patient with full details
 const getPatientById = async (req, res) => {
   try {
@@ -94,8 +128,32 @@ const createPatient = async (req, res) => {
   }
 };
 
+// Get basic patient info (public access for barcode verification)
+const getPatientPublicInfo = async (req, res) => {
+  try {
+    const patientId = req.params.id;
+
+    // Get only basic patient info for public access
+    const [patients] = await pool.query(
+      'SELECT id, full_name, amka FROM patients WHERE id = ?',
+      [patientId]
+    );
+
+    if (patients.length === 0) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    res.json(patients[0]);
+  } catch (error) {
+    console.error('Error fetching patient public info:', error);
+    res.status(500).json({ message: 'Server error fetching patient info' });
+  }
+};
+
 module.exports = {
   getAllPatients,
+  getAllPatientsWithInstructions,
   getPatientById,
-  createPatient
+  createPatient,
+  getPatientPublicInfo
 };

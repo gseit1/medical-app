@@ -1,0 +1,16 @@
+# Render Build Configuration
+# This file tells Render how to build and deploy your app
+
+# Build Command (automatically detected from package.json)
+# npm install
+
+# Start Command (automatically detected from package.json)
+# npm start
+
+# Environment Variables to set in Render Dashboard:
+# NODE_ENV=production
+# MONGODB_URI=mongodb+srv://admin:Ayra1357@cluster0.5u65it4.mongodb.net/medical_app?retryWrites=true&w=majority&appName=Cluster0
+# JWT_SECRET=your-super-secure-production-jwt-secret-key
+# PORT=10000
+
+# Health Check Endpoint: /api/health

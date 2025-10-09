@@ -86,7 +86,7 @@
                   :key="instruction.id"
                   class="instruction-item p-3 mb-3 border rounded"
                   :class="{ 
-                    'completed': instruction.status === 'Ολοκληρωμένη',
+                    'completed': instruction.status === 'Completed',
                     'border-success': instruction.verified
                   }"
                 >
@@ -111,14 +111,14 @@
                     <div class="ms-3 d-flex flex-column gap-2">
                       <span
                         class="badge status-badge"
-                        :class="instruction.status === 'Ολοκληρωμένη' ? 'bg-success' : 'bg-warning text-dark'"
+                        :class="instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'"
                       >
-                        {{ instruction.status }}
+                        {{ instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή' }}
                       </span>
                       
                       <!-- Verify Button - Show for pending instructions -->
                       <button
-                        v-if="authStore.isNurse && instruction.status !== 'Ολοκληρωμένη'"
+                        v-if="authStore.isNurse && instruction.status !== 'Completed'"
                         class="btn btn-sm btn-primary"
                         @click="openVerificationModal(instruction)"
                         :disabled="instruction.verified"
@@ -129,7 +129,7 @@
                       
                       <!-- Complete Button - Show only after verification -->
                       <button
-                        v-if="authStore.isNurse && instruction.verified && instruction.status !== 'Ολοκληρωμένη'"
+                        v-if="authStore.isNurse && instruction.verified && instruction.status !== 'Completed'"
                         class="btn btn-sm btn-success"
                         @click="completeInstruction(instruction.id)"
                       >
