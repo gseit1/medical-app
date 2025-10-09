@@ -96,7 +96,58 @@
               <i class="bi bi-person-fill me-2"></i>
               <div>
                 <strong>Επιλεγμένος Ασθενής:</strong> {{ selectedPatient.full_name }}<br>
-                <small>ΑΜΚΑ: {{ selectedPatient.amka }}</small>
+                <small>ΑΜΚΑ: {{ selectedPatient.amka }} | Ομάδα Αίματος: {{ selectedPatient.blood_type }}</small>
+              </div>
+            </div>
+
+            <!-- Patient's Medical Instructions -->
+            <div class="mb-4">
+              <h5 class="mb-3">
+                <i class="bi bi-list-check"></i> Ιατρικές Οδηγίες Ασθενή
+              </h5>
+              <div class="row g-2">
+                <div 
+                  v-for="instruction in selectedPatient.medical_instructions" 
+                  :key="instruction.id"
+                  class="col-md-6"
+                >
+                  <div 
+                    class="card instruction-card h-100"
+                    :class="{
+                      'border-success': instruction.status === 'Completed',
+                      'border-warning': instruction.status === 'Pending',
+                      'bg-light': instruction.status === 'Completed'
+                    }"
+                  >
+                    <div class="card-body p-3">
+                      <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h6 class="card-title mb-0">{{ instruction.description }}</h6>
+                        <span 
+                          class="badge ms-2"
+                          :class="instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'"
+                        >
+                          {{ instruction.status === 'Completed' ? 'Χορηγήθηκε' : 'Εκκρεμή' }}
+                        </span>
+                      </div>
+                      
+                      <p class="card-text small text-muted mb-2">
+                        <strong>Barcode:</strong> {{ instruction.barcode }}
+                      </p>
+                      
+                      <!-- Completion timestamp -->
+                      <div v-if="instruction.status === 'Completed' && instruction.completed_at" class="small text-success">
+                        <i class="bi bi-check-circle"></i>
+                        Χορηγήθηκε: {{ formatDateTime(instruction.completed_at) }}
+                      </div>
+                      
+                      <!-- Created timestamp -->
+                      <div class="small text-muted">
+                        <i class="bi bi-calendar"></i>
+                        Δημιουργήθηκε: {{ formatDateTime(instruction.created_at) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -160,24 +211,37 @@
                   <h6>Στοιχεία Φαρμάκου:</h6>
                   <p class="mb-1"><strong>Περιγραφή:</strong> {{ verificationResult.instruction.description }}</p>
                   <p class="mb-1"><strong>Barcode:</strong> {{ verificationResult.instruction.barcode }}</p>
-                  <p class="mb-0">
+                  <p class="mb-1">
                     <strong>Κατάσταση:</strong> 
-                    <span class="badge" :class="verificationResult.instruction.status === 'Completed' ? 'bg-success' : 'bg-warning'">
+                    <span class="badge" :class="verificationResult.instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'">
                       {{ verificationResult.instruction.status === 'Completed' ? 'Χορηγήθηκε' : 'Εκκρεμή' }}
                     </span>
                   </p>
+                  <!-- Show completion time if available -->
+                  <p class="mb-0" v-if="verificationResult.instruction.status === 'Completed' && verificationResult.instruction.completed_at">
+                    <strong>Χορηγήθηκε στις:</strong> {{ formatDateTime(verificationResult.instruction.completed_at) }}
+                  </p>
                 </div>
 
-                <!-- Action Button -->
-                <div class="mt-3" v-if="verificationResult.instruction.status !== 'Completed'">
-                  <button class="btn btn-success btn-lg" @click="markAsCompleted">
+                <!-- Action Buttons -->
+                <div class="mt-3 d-flex gap-2">
+                  <button 
+                    v-if="verificationResult.instruction.status !== 'Completed'" 
+                    class="btn btn-success" 
+                    @click="markAsCompleted"
+                  >
                     <i class="bi bi-check-square"></i> Επιβεβαίωση Χορήγησης
                   </button>
+                  
+                  <button class="btn btn-outline-primary" @click="scanNextMedication">
+                    <i class="bi bi-plus-circle"></i> Σκάναρε Άλλο Φάρμακο
+                  </button>
                 </div>
-                <div class="mt-3" v-else>
+                
+                <div class="mt-2" v-if="verificationResult.instruction.status === 'Completed'">
                   <div class="alert alert-info mb-0">
                     <i class="bi bi-info-circle"></i>
-                    Το φάρμακο έχει ήδη χορηγηθεί σε αυτόν τον ασθενή.
+                    Το φάρμακο έχει ήδη χορηγηθεί. Μπορείτε να σκαναρίσετε άλλο φάρμακο για αυτόν τον ασθενή.
                   </div>
                 </div>
               </div>
@@ -296,9 +360,19 @@ export default {
       try {
         await api.patch(`/instructions/${verificationResult.value.instruction.id}/complete`)
         
-        // Update local state
+        // Update local state with completion timestamp
         if (verificationResult.value.instruction) {
           verificationResult.value.instruction.status = 'Completed'
+          verificationResult.value.instruction.completed_at = new Date().toISOString()
+        }
+        
+        // Update the instruction in the patient's list
+        const instructionIndex = selectedPatient.value.medical_instructions.findIndex(
+          inst => inst.id === verificationResult.value.instruction.id
+        )
+        if (instructionIndex !== -1) {
+          selectedPatient.value.medical_instructions[instructionIndex].status = 'Completed'
+          selectedPatient.value.medical_instructions[instructionIndex].completed_at = new Date().toISOString()
         }
         
         alert('✅ Το φάρμακο χορηγήθηκε επιτυχώς!')
@@ -306,6 +380,30 @@ export default {
       } catch (err) {
         alert('❌ Σφάλμα κατά την καταγραφή χορήγησης')
       }
+    }
+
+    // Scan next medication for the same patient
+    const scanNextMedication = () => {
+      scannedBarcode.value = ''
+      verificationResult.value = null
+      error.value = null
+    }
+
+    // Format date and time for display
+    const formatDateTime = (dateString) => {
+      if (!dateString) return ''
+      
+      const date = new Date(dateString)
+      const options = {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }
+      
+      return date.toLocaleDateString('el-GR', options)
     }
 
     // Reset to start over
@@ -363,7 +461,9 @@ export default {
       startOver,
       goBackToPatientSelection,
       handleBarcodeDetected,
-      clearBarcode
+      clearBarcode,
+      scanNextMedication,
+      formatDateTime
     }
   }
 }
@@ -443,6 +543,22 @@ export default {
   border-color: #0d6efd;
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
+}
+
+.instruction-card {
+  transition: all 0.2s ease;
+}
+
+.instruction-card:hover {
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.instruction-card.border-success {
+  background-color: rgba(25, 135, 84, 0.05);
+}
+
+.instruction-card.border-warning {
+  background-color: rgba(255, 193, 7, 0.05);
 }
 
 .alert {
