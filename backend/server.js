@@ -25,7 +25,8 @@ const allowedOrigins = [
   'https://127.0.0.1:3000',
   // Production - replace with your actual Netlify URL
   'https://clinical.netlify.app',
-  'https://YOUR_NETLIFY_SITE_NAME.netlify.app'
+  'https://lustrous-cupcake-b72349.netlify.app',
+  'https://clinical-medical-app.netlify.app'
 ];
 
 app.use(cors({

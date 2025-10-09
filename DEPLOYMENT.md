@@ -8,9 +8,39 @@ This guide covers deploying the Clinical Medical App to production using:
 
 ## Prerequisites
 ✅ MongoDB Atlas database set up and seeded
+✅ MongoDB Atlas Network Access configured (see MongoDB Setup below)
 ✅ GitHub repository with latest code
 ✅ Netlify account
 ✅ Render account
+
+## 0. MongoDB Atlas Network Configuration (CRITICAL)
+
+⚠️ **IMPORTANT**: Before deploying to Render, you MUST configure MongoDB Atlas network access:
+
+### Step 1: Access MongoDB Atlas
+1. Go to [MongoDB Atlas Dashboard](https://cloud.mongodb.com/)
+2. Select your `Cluster0` cluster
+
+### Step 2: Configure Network Access
+1. Click **"Network Access"** in the left sidebar
+2. Click **"Add IP Address"**
+3. Choose one option:
+
+**Option A: Allow All (Recommended for Development)**
+- Select **"Allow Access from Anywhere"**
+- This adds `0.0.0.0/0` to whitelist
+
+**Option B: Render-Specific IPs (More Secure)**
+- Add these Render IP ranges:
+  ```
+  52.5.144.0/20
+  3.208.0.0/12
+  52.70.0.0/15
+  18.214.0.0/16
+  54.196.0.0/15
+  ```
+
+4. Click **"Confirm"** and wait for changes to deploy (1-2 minutes)
 
 ## 1. Backend Deployment (Render)
 
