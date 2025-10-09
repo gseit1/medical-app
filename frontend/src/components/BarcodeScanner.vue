@@ -5,7 +5,7 @@
               </button>
             </div>
             
-            <!-- Quick Test Buttons -->
+            Quick Test Buttons
             <div class="mt-2">
               <p class="text-white-50 small mb-2">Δοκιμαστικά barcodes:</p>
               <div class="d-flex flex-wrap gap-1">
@@ -23,7 +23,8 @@
           </div>
         </div>
       </div>
-    </div> Container -->
+    </div> -->
+    <!-- End of commented Container section -->
     <div v-if="isScanning" class="scanner-container">
       <div class="scanner-overlay">
         <div class="scanner-header">
