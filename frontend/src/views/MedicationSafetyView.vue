@@ -327,12 +327,13 @@ export default {
 
     // Handle barcode detected from scanner
     const handleBarcodeDetected = (barcode) => {
-      console.log('Barcode detected:', barcode)
+      console.log('🎯 Parent received barcode:', barcode)
       scannedBarcode.value = barcode
       error.value = null
       
       // Auto-verify after scanning (optional - remove if you want manual confirmation)
       setTimeout(() => {
+        console.log('🔄 Auto-verifying medication...')
         verifyMedication()
       }, 500)
     }

@@ -215,13 +215,42 @@ export default {
         // Listen for successful barcode detection
         Quagga.onDetected((result) => {
           const code = result.codeResult.code
-          console.log('Barcode detected:', code)
+          console.log('🔍 Barcode detected:', code)
+          console.log('🔍 Full result:', result)
           
           // Validate barcode format (basic check)
           if (code && code.length >= 5) {
+            console.log('✅ Valid barcode, emitting event:', code)
             lastScannedBarcode.value = code
             emit('barcode-detected', code)
             stopScanner()
+          } else {
+            console.log('❌ Invalid barcode (too short):', code)
+          }
+        })
+
+        // Add processing listener for debugging
+        Quagga.onProcessed((result) => {
+          const drawingCtx = Quagga.canvas.ctx.overlay
+          const drawingCanvas = Quagga.canvas.dom.overlay
+
+          if (result) {
+            if (result.boxes) {
+              drawingCtx.clearRect(0, 0, parseInt(drawingCanvas.getAttribute("width")), parseInt(drawingCanvas.getAttribute("height")))
+              result.boxes.filter(function (box) {
+                return box !== result.box
+              }).forEach(function (box) {
+                Quagga.ImageDebug.drawPath(box, { x: 0, y: 1 }, drawingCtx, { color: "green", lineWidth: 2 })
+              })
+            }
+
+            if (result.box) {
+              Quagga.ImageDebug.drawPath(result.box, { x: 0, y: 1 }, drawingCtx, { color: "#00F", lineWidth: 2 })
+            }
+
+            if (result.codeResult && result.codeResult.code) {
+              Quagga.ImageDebug.drawPath(result.line, { x: 'x', y: 'y' }, drawingCtx, { color: 'red', lineWidth: 3 })
+            }
           }
         })
 
