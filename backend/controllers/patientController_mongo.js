@@ -4,14 +4,6 @@ const { Patient, MedicalInstruction, Referral } = require('../models');
 const getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find()
-      .populate({
-        path: 'medical_instructions',
-        model: 'MedicalInstruction'
-      })
-      .populate({
-        path: 'referrals', 
-        model: 'Referral'
-      })
       .sort({ createdAt: -1 });
 
     // Manually populate medical instructions and referrals since they reference patient_id
