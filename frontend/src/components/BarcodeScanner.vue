@@ -1,6 +1,29 @@
 <template>
   <div class="barcode-scanner">
-    <!-- Scanner Container -->
+    <!--              <button class="btn btn-success" @click="submitManualBarcode">
+                <i class="bi bi-check"></i> Υποβολή
+              </button>
+            </div>
+            
+            <!-- Quick Test Buttons -->
+            <div class="mt-2">
+              <p class="text-white-50 small mb-2">Δοκιμαστικά barcodes:</p>
+              <div class="d-flex flex-wrap gap-1">
+                <button class="btn btn-outline-info btn-sm" @click="testBarcode('MED001234567')">
+                  MED001234567
+                </button>
+                <button class="btn btn-outline-info btn-sm" @click="testBarcode('MED001234568')">
+                  MED001234568
+                </button>
+                <button class="btn btn-outline-info btn-sm" @click="testBarcode('MED001234569')">
+                  MED001234569
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div> Container -->
     <div v-if="isScanning" class="scanner-container">
       <div class="scanner-overlay">
         <div class="scanner-header">
@@ -36,6 +59,9 @@
             <button class="btn btn-outline-light btn-sm" @click="showManualInput = !showManualInput">
               <i class="bi bi-keyboard"></i> Χειροκίνητη Εισαγωγή
             </button>
+            <button class="btn btn-outline-warning btn-sm ms-2" @click="useSimpleScanner = !useSimpleScanner">
+              <i class="bi bi-camera2"></i> Απλό Scanner
+            </button>
           </div>
           
           <div v-if="showManualInput" class="mt-3">
@@ -44,10 +70,11 @@
                 v-model="manualBarcode" 
                 type="text" 
                 class="form-control" 
-                placeholder="Εισάγετε barcode..."
+                placeholder="π.χ. MED001234567"
                 @keyup.enter="submitManualBarcode"
+                style="background: rgba(255,255,255,0.9);"
               >
-              <button class="btn btn-primary" @click="submitManualBarcode">
+              <button class="btn btn-success" @click="submitManualBarcode">
                 <i class="bi bi-check"></i>
               </button>
             </div>
@@ -126,6 +153,7 @@ export default {
     const scannerElement = ref(null)
     const isScanning = ref(false)
     const showManualInput = ref(false)
+    const useSimpleScanner = ref(false)
     const manualBarcode = ref('')
     const lastScannedBarcode = ref('')
     const error = ref(null)
@@ -160,29 +188,43 @@ export default {
             type: "LiveStream",
             target: scannerElement.value,
             constraints: {
-              width: 320,
-              height: 240,
+              width: 640,
+              height: 480,
               facingMode: "environment" // Use back camera
             }
           },
           locator: {
-            patchSize: "medium",
-            halfSample: true
+            patchSize: "large",
+            halfSample: false
           },
-          numOfWorkers: 2,
+          numOfWorkers: navigator.hardwareConcurrency || 2,
           frequency: 10,
           decoder: {
             readers: [
               "code_128_reader",
               "ean_reader",
-              "ean_8_reader",
+              "ean_8_reader", 
               "code_39_reader",
               "code_39_vin_reader",
               "codabar_reader",
               "upc_reader",
               "upc_e_reader",
               "i2of5_reader"
-            ]
+            ],
+            debug: {
+              showCanvas: false,
+              showPatches: false,
+              showFoundPatches: false,
+              showSkeleton: false,
+              showLabels: false,
+              showPatchLabels: false,
+              showRemainingPatchLabels: false,
+              boxFromPatches: {
+                showTransformed: false,
+                showTransformedBox: false,
+                showBB: false
+              }
+            }
           },
           locate: true
         }
@@ -212,21 +254,42 @@ export default {
           Quagga.start()
         })
 
+        // Track consecutive detections for reliability
+        let consecutiveDetections = {}
+        let detectionThreshold = 3 // Require 3 consecutive detections
+        
         // Listen for successful barcode detection
         Quagga.onDetected((result) => {
           const code = result.codeResult.code
           console.log('🔍 Barcode detected:', code)
-          console.log('🔍 Full result:', result)
           
-          // Validate barcode format (basic check)
-          if (code && code.length >= 5) {
-            console.log('✅ Valid barcode, emitting event:', code)
+          if (!code || code.length < 5) {
+            console.log('❌ Invalid barcode (too short):', code)
+            return
+          }
+          
+          // Count consecutive detections
+          if (!consecutiveDetections[code]) {
+            consecutiveDetections[code] = 0
+          }
+          consecutiveDetections[code]++
+          
+          console.log(`📊 Consecutive detections for ${code}: ${consecutiveDetections[code]}/${detectionThreshold}`)
+          
+          // If we have enough consecutive detections, accept the barcode
+          if (consecutiveDetections[code] >= detectionThreshold) {
+            console.log('✅ Valid barcode confirmed, emitting event:', code)
             lastScannedBarcode.value = code
             emit('barcode-detected', code)
             stopScanner()
-          } else {
-            console.log('❌ Invalid barcode (too short):', code)
           }
+          
+          // Clear other codes after successful detection
+          setTimeout(() => {
+            if (consecutiveDetections[code] < detectionThreshold) {
+              consecutiveDetections = {}
+            }
+          }, 1000)
         })
 
         // Add processing listener for debugging
@@ -273,11 +336,19 @@ export default {
     const submitManualBarcode = () => {
       if (manualBarcode.value.trim()) {
         const code = manualBarcode.value.trim()
+        console.log('📝 Manual barcode input:', code)
         lastScannedBarcode.value = code
         emit('barcode-detected', code)
         manualBarcode.value = ''
         showManualInput.value = false
       }
+    }
+
+    const testBarcode = (code) => {
+      console.log('🧪 Test barcode:', code)
+      lastScannedBarcode.value = code
+      emit('barcode-detected', code)
+      stopScanner()
     }
 
     onUnmounted(() => {
@@ -288,12 +359,14 @@ export default {
       scannerElement,
       isScanning,
       showManualInput,
+      useSimpleScanner,
       manualBarcode,
       lastScannedBarcode,
       error,
       startScanner,
       stopScanner,
-      submitManualBarcode
+      submitManualBarcode,
+      testBarcode
     }
   }
 }
