@@ -1,13 +1,11 @@
-const { pool } = require('../config/database');
+const { Patient, MedicalInstruction } = require('../models');
 
 // Get all patients (nurse only)
 const getAllPatients = async (req, res) => {
   try {
-    const [patients] = await pool.query(`
-      SELECT id, full_name, amka, afm, blood_type, created_at
-      FROM patients
-      ORDER BY full_name
-    `);
+    const patients = await Patient.find({})
+      .select('full_name amka afm blood_type profile_image age gender diagnosis admission_date room_number bed_number condition vital_signs medications allergies emergency_contact created_at')
+      .sort({ full_name: 1 });
 
     res.json(patients);
   } catch (error) {
@@ -19,25 +17,18 @@ const getAllPatients = async (req, res) => {
 // Get all patients with their medical instructions (for barcode generator)
 const getAllPatientsWithInstructions = async (req, res) => {
   try {
-    const [patients] = await pool.query(`
-      SELECT id, full_name, amka, afm, blood_type, created_at
-      FROM patients
-      ORDER BY full_name
-    `);
+    const patients = await Patient.find({})
+      .select('full_name amka afm blood_type profile_image age gender diagnosis admission_date room_number bed_number condition vital_signs medications allergies emergency_contact created_at')
+      .sort({ full_name: 1 });
 
     // Get medical instructions for each patient
     const patientsWithInstructions = await Promise.all(
       patients.map(async (patient) => {
-        const [instructions] = await pool.query(
-          `SELECT id, description, barcode, status, created_at, completed_at
-           FROM medical_instructions
-           WHERE patient_id = ?
-           ORDER BY created_at DESC`,
-          [patient.id]
-        );
+        const instructions = await MedicalInstruction.find({ patient_id: patient._id })
+          .sort({ created_at: -1 });
         
         return {
-          ...patient,
+          ...patient.toObject(),
           medical_instructions: instructions
         };
       })
@@ -56,40 +47,20 @@ const getPatientById = async (req, res) => {
     const patientId = req.params.id;
 
     // Get patient basic info
-    const [patients] = await pool.query(
-      'SELECT * FROM patients WHERE id = ?',
-      [patientId]
-    );
+    const patient = await Patient.findById(patientId);
 
-    if (patients.length === 0) {
+    if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
-    const patient = patients[0];
-
     // Get medical instructions
-    const [instructions] = await pool.query(
-      `SELECT id, description, barcode, status, created_at, completed_at
-       FROM medical_instructions
-       WHERE patient_id = ?
-       ORDER BY created_at DESC`,
-      [patientId]
-    );
-
-    // Get referrals
-    const [referrals] = await pool.query(
-      `SELECT id, description, referral_date, doctor_name, created_at
-       FROM referrals
-       WHERE patient_id = ?
-       ORDER BY referral_date DESC`,
-      [patientId]
-    );
+    const instructions = await MedicalInstruction.find({ patient_id: patientId })
+      .sort({ created_at: -1 });
 
     // Combine all data
     res.json({
-      ...patient,
-      medical_instructions: instructions,
-      referrals: referrals
+      ...patient.toObject(),
+      medical_instructions: instructions
     });
 
   } catch (error) {
@@ -101,27 +72,39 @@ const getPatientById = async (req, res) => {
 // Create new patient
 const createPatient = async (req, res) => {
   try {
-    const { full_name, amka, afm, blood_type } = req.body;
+    const { full_name, amka, afm, blood_type, age, gender, diagnosis, room_number, bed_number } = req.body;
 
     // Validate required fields
     if (!full_name || !amka || !afm) {
       return res.status(400).json({ message: 'Full name, AMKA, and AFM are required' });
     }
 
-    // Insert patient
-    const [result] = await pool.query(
-      'INSERT INTO patients (full_name, amka, afm, blood_type) VALUES (?, ?, ?, ?)',
-      [full_name, amka, afm, blood_type]
-    );
+    // Create new patient
+    const newPatient = new Patient({
+      full_name,
+      amka,
+      afm,
+      blood_type,
+      age,
+      gender,
+      diagnosis,
+      room_number,
+      bed_number,
+      admission_date: new Date(),
+      condition: 'stable',
+      profile_image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face&auto=format&q=80'
+    });
+
+    const savedPatient = await newPatient.save();
 
     res.status(201).json({
       message: 'Patient created successfully',
-      patientId: result.insertId
+      patientId: savedPatient._id
     });
 
   } catch (error) {
     console.error('Error creating patient:', error);
-    if (error.code === 'ER_DUP_ENTRY') {
+    if (error.code === 11000) {
       return res.status(400).json({ message: 'AMKA or AFM already exists' });
     }
     res.status(500).json({ message: 'Server error creating patient' });
@@ -134,16 +117,14 @@ const getPatientPublicInfo = async (req, res) => {
     const patientId = req.params.id;
 
     // Get only basic patient info for public access
-    const [patients] = await pool.query(
-      'SELECT id, full_name, amka FROM patients WHERE id = ?',
-      [patientId]
-    );
+    const patient = await Patient.findById(patientId)
+      .select('full_name amka profile_image');
 
-    if (patients.length === 0) {
+    if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
-    res.json(patients[0]);
+    res.json(patient);
   } catch (error) {
     console.error('Error fetching patient public info:', error);
     res.status(500).json({ message: 'Server error fetching patient info' });

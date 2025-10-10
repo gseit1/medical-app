@@ -18,12 +18,10 @@ const verifyBarcode = async (req, res) => {
     }
 
     // Check if barcode exists for this patient
-    const [instructions] = await pool.query(
-      `SELECT id, description, barcode, status, patient_id
-       FROM medical_instructions
-       WHERE patient_id = ? AND barcode = ?`,
-      [patientId, barcode]
-    );
+    const instructions = await MedicalInstruction.find({ 
+      patient_id: patientId, 
+      barcode: barcode 
+    });
 
     console.log('Instructions found:', instructions.length);
     if (instructions.length > 0) {
@@ -32,10 +30,7 @@ const verifyBarcode = async (req, res) => {
 
     if (instructions.length === 0) {
       // Check if barcode exists for a different patient
-      const [otherInstructions] = await pool.query(
-        `SELECT patient_id FROM medical_instructions WHERE barcode = ?`,
-        [barcode]
-      );
+      const otherInstructions = await MedicalInstruction.find({ barcode: barcode });
 
       if (otherInstructions.length > 0) {
         return res.json({

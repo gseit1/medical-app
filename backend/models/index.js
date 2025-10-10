@@ -19,6 +19,27 @@ const patientSchema = new mongoose.Schema({
   blood_type: {
     type: String,
     required: true
+  },
+  profile_image: {
+    type: String,
+    default: null
+  },
+  age: {
+    type: Number,
+    required: false
+  },
+  gender: {
+    type: String,
+    enum: ['Άνδρας', 'Γυναίκα', 'Άλλο'],
+    required: false
+  },
+  phone: {
+    type: String,
+    required: false
+  },
+  address: {
+    type: String,
+    required: false
   }
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt
