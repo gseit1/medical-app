@@ -109,7 +109,13 @@
                     @click="selectPatient(patient)"
                   >
                     <div class="patient-avatar">
-                      <i class="bi bi-person-fill"></i>
+                      <img 
+                        v-if="getPatientAvatar(patient)"
+                        :src="getPatientAvatar(patient)"
+                        :alt="patient.full_name"
+                        class="patient-profile-image-safety"
+                      >
+                      <i v-else class="bi bi-person-fill"></i>
                       <div class="online-indicator"></div>
                     </div>
                     
@@ -713,7 +719,7 @@ export default {
     const isScanning = ref(false)
     const scannerActive = ref(false)
 
-    // Modal functionality
+    // Modal functionality 
     const showVerificationModal = ref(false)
     const modalType = ref('') // 'success', 'error', 'already-completed'
     const completing = ref(false)
@@ -758,6 +764,25 @@ export default {
     
     const setFilter = (filter) => {
       activeFilter.value = filter
+    }
+
+    // Professional Patient Avatar System for Medication Safety
+    const getPatientAvatar = (patient) => {
+      const patientAvatars = [
+        'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=80&h=80&fit=crop&crop=face&auto=format', // Medical professional woman
+        'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=80&h=80&fit=crop&crop=face&auto=format', // Medical professional man
+        'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=80&h=80&fit=crop&crop=face&auto=format', // Healthcare worker woman
+        'https://images.unsplash.com/photo-1594824475968-1c6c3738ce8e?w=80&h=80&fit=crop&crop=face&auto=format', // Healthcare worker man
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face&auto=format', // Professional man
+        'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face&auto=format', // Professional woman
+        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face&auto=format', // Business professional
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face&auto=format', // Young professional
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&crop=face&auto=format', // Business woman
+        'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=80&h=80&fit=crop&crop=face&auto=format' // Senior professional
+      ]
+      
+      const avatarIndex = (patient.id || 0) % patientAvatars.length
+      return patientAvatars[avatarIndex]
     }
 
     // Fetch all patients for selection
@@ -1655,6 +1680,23 @@ export default {
   font-size: 1.5rem;
   color: #64748b;
   position: relative;
+}
+
+/* Professional Patient Image for Medication Safety */
+.patient-profile-image-safety {
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.patient-card-modern:hover .patient-profile-image-safety {
+  transform: scale(1.05);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  border-color: #3b82f6;
 }
 
 .online-indicator {

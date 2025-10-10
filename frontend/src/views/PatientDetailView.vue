@@ -43,6 +43,21 @@
               </h5>
             </div>
             <div class="card-body">
+              <!-- Patient Avatar -->
+              <div class="text-center mb-4">
+                <div class="patient-avatar-large">
+                  <img 
+                    v-if="getPatientAvatar(patient)"
+                    :src="getPatientAvatar(patient)"
+                    :alt="patient.full_name"
+                    class="patient-profile-image-large"
+                  >
+                  <i v-else class="bi bi-person-circle"></i>
+                </div>
+                <h5 class="mt-2 mb-0">{{ patient.full_name }}</h5>
+                <small class="text-muted">Patient ID: {{ patient.id }}</small>
+              </div>
+              
               <div class="mb-3">
                 <label class="text-muted small">Ονοματεπώνυμο</label>
                 <p class="fw-bold mb-0">{{ patient.full_name }}</p>
@@ -336,6 +351,25 @@ const scanMethod = ref('manual') // Default to manual entry for reliability
 const manualBarcode = ref('')
 const scanningBarcode = ref(false)
 const verificationResult = ref(null)
+
+// Patient Avatar System
+const getPatientAvatar = (patient) => {
+  if (!patient) return null
+  
+  const patientAvatars = [
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face&auto=format&q=80',
+    'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120&h=120&fit=crop&crop=face&auto=format&q=80'
+  ]
+  
+  const avatarIndex = (patient.id || 0) % patientAvatars.length
+  return patientAvatars[avatarIndex]
+}
 
 const fetchPatientDetails = async () => {
   try {
@@ -653,6 +687,40 @@ label {
 
 .alert-sm {
   font-size: 0.875rem;
+}
+
+/* Patient Avatar Large Styling */
+.patient-avatar-large {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  position: relative;
+}
+
+.patient-profile-image-large {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.patient-profile-image-large:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  border-color: #3b82f6;
+}
+
+.patient-avatar-large i {
+  font-size: 2.5rem;
+  color: #ffffff;
 }
 
 /* Mobile responsive */

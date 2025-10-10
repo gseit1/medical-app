@@ -164,7 +164,13 @@
                   <td class="table-cell">
                     <div class="patient-info">
                       <div class="patient-avatar">
-                        <i class="bi bi-person-circle"></i>
+                        <img 
+                          v-if="getPatientAvatar(patient)"
+                          :src="getPatientAvatar(patient)"
+                          :alt="patient.full_name"
+                          class="patient-profile-image"
+                        >
+                        <i v-else class="bi bi-person-circle"></i>
                       </div>
                       <div class="patient-details">
                         <div class="patient-name">{{ patient.full_name }}</div>
@@ -231,7 +237,13 @@
                  :style="{ animationDelay: (index * 0.1) + 's' }">
               <div class="mobile-card-header">
                 <div class="patient-avatar-mobile">
-                  <i class="bi bi-person-circle"></i>
+                  <img 
+                    v-if="getPatientAvatar(patient)"
+                    :src="getPatientAvatar(patient)"
+                    :alt="patient.full_name"
+                    class="patient-profile-image-mobile"
+                  >
+                  <i v-else class="bi bi-person-circle"></i>
                 </div>
                 <div class="patient-info-mobile">
                   <h6 class="patient-name-mobile">{{ patient.full_name }}</h6>
@@ -402,6 +414,32 @@ const copyToClipboard = async (text) => {
   } catch (err) {
     console.error('Failed to copy:', err)
   }
+}
+
+// Professional Patient Avatar System
+const getPatientAvatar = (patient) => {
+  // Generate consistent avatar based on patient ID or name
+  const patientAvatars = [
+    'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=100&h=100&fit=crop&crop=face&auto=format', // Medical professional woman
+    'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face&auto=format', // Medical professional man
+    'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face&auto=format', // Healthcare worker woman
+    'https://images.unsplash.com/photo-1594824475968-1c6c3738ce8e?w=100&h=100&fit=crop&crop=face&auto=format', // Healthcare worker man
+    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face&auto=format', // Professional man
+    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face&auto=format', // Professional woman
+    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face&auto=format', // Business professional
+    'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face&auto=format', // Young professional
+    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face&auto=format', // Business woman
+    'https://images.unsplash.com/photo-1566492031773-4f4e44671d66?w=100&h=100&fit=crop&crop=face&auto=format', // Senior professional
+    'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=face&auto=format', // Professional woman with glasses
+    'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&h=100&fit=crop&crop=face&auto=format', // Young man
+    'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=face&auto=format', // Professional woman
+    'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&h=100&fit=crop&crop=face&auto=format', // Professional man
+    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face&auto=format'  // Young woman
+  ]
+  
+  // Use patient ID to get consistent avatar
+  const avatarIndex = (patient.id || 0) % patientAvatars.length
+  return patientAvatars[avatarIndex]
 }
 
 const getBloodTypeClass = (bloodType) => {
@@ -908,6 +946,23 @@ onMounted(() => {
   font-size: 1.2rem;
 }
 
+/* Patient Profile Image Styling */
+.patient-profile-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.patient-profile-image:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  border-color: #3b82f6;
+}
+
 .patient-name {
   font-weight: 600;
   color: #1f2937;
@@ -1042,6 +1097,17 @@ onMounted(() => {
   justify-content: center;
   color: white;
   font-size: 1.5rem;
+}
+
+/* Mobile Patient Profile Image */
+.patient-profile-image-mobile {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
 .patient-info-mobile {

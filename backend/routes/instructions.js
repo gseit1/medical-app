@@ -9,6 +9,11 @@ const {
   verifySafety,
   checkMedicationCompleted
 } = require('../controllers/instructionController_mongo');
+const { 
+  getAllInstructionsMongo,
+  updateInstructionMongo,
+  getInstructionByIdMongo
+} = require('../controllers/instructionController');
 const { authenticateToken, requireNurse } = require('../middleware/auth');
 
 // POST /api/instructions/verify-barcode - Verify barcode for patient
@@ -31,5 +36,15 @@ router.get('/patient/:patientId', authenticateToken, getInstructionsByPatient);
 
 // POST /api/instructions - Create new instruction (nurse only)
 router.post('/', authenticateToken, requireNurse, createInstruction);
+
+// MongoDB-based endpoints for the new medical instructions view
+// GET /api/instructions - Get all instructions with patient data (nurse only)
+router.get('/', authenticateToken, requireNurse, getAllInstructionsMongo);
+
+// GET /api/instructions/:id - Get specific instruction by ID
+router.get('/:id', authenticateToken, getInstructionByIdMongo);
+
+// PUT /api/instructions/:id - Update instruction (nurse only)
+router.put('/:id', authenticateToken, requireNurse, updateInstructionMongo);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { MedicalInstruction, Patient } = require('../models');
 
 // Verify barcode for a specific patient
 const verifyBarcode = async (req, res) => {
@@ -369,11 +369,95 @@ const verifySafety = async (req, res) => {
   }
 };
 
+// Get all medical instructions with patient data (MongoDB version)
+const getAllInstructionsMongo = async (req, res) => {
+  try {
+    const instructions = await MedicalInstruction.find({})
+      .populate('patient_id', 'full_name amka blood_type')
+      .sort({ createdAt: -1 });
+
+    res.json(instructions);
+  } catch (error) {
+    console.error('Error fetching instructions:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Σφάλμα κατά την ανάκτηση των ιατρικών οδηγιών' 
+    });
+  }
+};
+
+// Update instruction status (MongoDB version)
+const updateInstructionMongo = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // If completing the instruction, set completed_at
+    if (updates.status === 'Completed') {
+      updates.completed_at = new Date();
+    }
+
+    const instruction = await MedicalInstruction.findByIdAndUpdate(
+      id, 
+      updates, 
+      { new: true }
+    ).populate('patient_id', 'full_name amka blood_type');
+
+    if (!instruction) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Η ιατρική οδηγία δεν βρέθηκε' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      instruction,
+      message: 'Η ιατρική οδηγία ενημερώθηκε επιτυχώς' 
+    });
+  } catch (error) {
+    console.error('Error updating instruction:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Σφάλμα κατά την ενημέρωση της ιατρικής οδηγίας' 
+    });
+  }
+};
+
+// Get instruction by ID with patient data (MongoDB version)
+const getInstructionByIdMongo = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const instruction = await MedicalInstruction.findById(id)
+      .populate('patient_id', 'full_name amka blood_type');
+
+    if (!instruction) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Η ιατρική οδηγία δεν βρέθηκε' 
+      });
+    }
+
+    res.json({ success: true, instruction });
+  } catch (error) {
+    console.error('Error fetching instruction:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Σφάλμα κατά την ανάκτηση της ιατρικής οδηγίας' 
+    });
+  }
+};
+
 module.exports = {
   verifyBarcode,
   verifyBarcodeById,
   completeInstruction,
   getInstructionsByPatient,
   createInstruction,
-  verifySafety
+  verifySafety,
+  // MongoDB versions
+  getAllInstructionsMongo,
+  updateInstructionMongo,
+  getInstructionByIdMongo
 };

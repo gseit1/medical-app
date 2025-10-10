@@ -7,6 +7,7 @@ import PatientDetailView from '../views/PatientDetailView.vue'
 import BarcodeGeneratorView from '../views/BarcodeGeneratorView.vue'
 import BarcodeVerifyView from '../views/BarcodeVerifyView.vue'
 import MedicationSafetyView from '../views/MedicationSafetyView.vue'
+import MedicalInstructionsView from '../views/MedicalInstructionsView.vue'
 
 const routes = [
   {
@@ -57,6 +58,12 @@ const routes = [
     path: '/medication-safety',
     name: 'medication-safety',
     component: MedicationSafetyView,
+    meta: { requiresAuth: true, requiresNurse: true }
+  },
+  {
+    path: '/medical-instructions',
+    name: 'medical-instructions',
+    component: MedicalInstructionsView,
     meta: { requiresAuth: true, requiresNurse: true }
   }
 ]
