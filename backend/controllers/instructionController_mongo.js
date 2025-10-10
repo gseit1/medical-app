@@ -346,11 +346,70 @@ const createInstruction = async (req, res) => {
   }
 };
 
+// Check if medication is already completed for a patient
+const checkMedicationCompleted = async (req, res) => {
+  try {
+    const { barcode, patientId } = req.body;
+
+    console.log('=== CHECKING MEDICATION COMPLETION ===');
+    console.log('Patient ID:', patientId);
+    console.log('Barcode:', barcode);
+
+    if (!patientId || !barcode) {
+      return res.status(400).json({ 
+        completed: false,
+        message: '❌ Λείπουν απαραίτητα στοιχεία' 
+      });
+    }
+
+    // Find the instruction for this patient and barcode
+    const instruction = await MedicalInstruction.findOne({
+      patient_id: patientId,
+      barcode: barcode
+    });
+
+    if (!instruction) {
+      // Barcode not found for this patient
+      return res.json({
+        completed: false,
+        message: 'Barcode not found for this patient'
+      });
+    }
+
+    // Check if already completed
+    const isCompleted = instruction.status === 'Completed';
+    
+    console.log('Medication completed:', isCompleted);
+    console.log('Current status:', instruction.status);
+
+    res.json({
+      completed: isCompleted,
+      instruction: {
+        id: instruction._id,
+        medication_name: instruction.medication_name,
+        dosage: instruction.dosage,
+        frequency: instruction.frequency,
+        status: instruction.status,
+        completed_at: instruction.completed_at,
+        description: instruction.description
+      }
+    });
+
+  } catch (error) {
+    console.error('Error checking medication completion:', error);
+    res.status(500).json({ 
+      completed: false,
+      message: 'Server error checking medication completion' 
+    });
+  }
+};
+
 module.exports = {
   verifyBarcode,
   verifyBarcodeById,
   verifySafety,
   completeInstruction,
   getInstructionsByPatient,
-  createInstruction
+  createInstruction,
+  checkMedicationCompleted
 };

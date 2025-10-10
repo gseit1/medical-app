@@ -29,7 +29,7 @@
       <div class="scanner-overlay">
         <div class="scanner-header">
           <h5 class="text-white mb-0">
-            <i class="bi bi-upc-scan"></i> Σκάρωση Barcode
+            <i class="bi bi-upc-scan"></i> Σάρωση Barcode
           </h5>
           <button class="btn btn-outline-light btn-sm" @click="stopScanner">
             <i class="bi bi-x"></i> Κλείσιμο

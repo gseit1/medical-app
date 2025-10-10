@@ -1,67 +1,31 @@
 <template>
   <div id="app">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" v-if="authStore.isAuthenticated">
-      <div class="container-fluid">
-        <router-link class="navbar-brand" to="/">
-          <i class="bi bi-hospital"></i> Ιατρική Εφαρμογή
-        </router-link>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item" v-if="authStore.user?.role === 'nurse'">
-              <router-link class="nav-link" to="/patients">
-                <i class="bi bi-people"></i> Ασθενείς
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link" to="/barcodes">
-                <i class="bi bi-upc-scan"></i> Barcodes
-              </router-link>
-            </li>
-            <li class="nav-item" v-if="authStore.user?.role === 'nurse'">
-              <router-link class="nav-link" to="/medication-safety">
-                <i class="bi bi-shield-check"></i> Ασφαλής Χορήγηση
-              </router-link>
-            </li>
-            <li class="nav-item" v-if="authStore.user?.role === 'patient'">
-              <router-link class="nav-link" :to="`/patients/${authStore.user.patient_id}`">
-                <i class="bi bi-person"></i> Το Προφίλ μου
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <span class="nav-link">
-                <i class="bi bi-person-circle"></i> {{ authStore.user?.username }}
-                <span class="badge bg-light text-dark ms-2">
-                  {{ authStore.user?.role === 'nurse' ? 'Νοσηλευτής' : 'Ασθενής' }}
-                </span>
-              </span>
-            </li>
-            <li class="nav-item">
-              <button class="btn btn-outline-light btn-sm ms-2" @click="logout">
-                <i class="bi bi-box-arrow-right"></i> Αποσύνδεση
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
+    <!-- Use the new navbar component only when authenticated -->
+    <NavbarComponent v-if="authStore.isAuthenticated" />
 
-    <main>
-      <router-view />
+    <!-- Main content area -->
+    <main class="main-content" :class="{ 'with-navbar': authStore.isAuthenticated, 'without-navbar': !authStore.isAuthenticated }">
+      <div class="content-wrapper">
+        <router-view />
+      </div>
     </main>
 
-    <footer class="bg-light text-center py-3 mt-5">
-      <div class="container">
-        <p class="text-muted mb-0">
-          © 2025 Ιατρική Εφαρμογή - Medical Application
-        </p>
+    <footer class="medical-footer">
+      <div class="container medical-container">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0">
+              <i class="bi bi-hospital-fill me-2"></i>
+              © 2025 MedicalApp Pro - Professional Healthcare Management
+            </p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <small class="text-muted">
+              <i class="bi bi-shield-fill-check me-1"></i>
+              Secure • HIPAA Compliant • Professional Grade
+            </small>
+          </div>
+        </div>
       </div>
     </footer>
   </div>
@@ -69,44 +33,66 @@
 
 <script setup>
 import { useAuthStore } from './stores/auth'
-import { useRouter } from 'vue-router'
+import NavbarComponent from './components/NavbarComponent.vue'
 
 const authStore = useAuthStore()
-const router = useRouter()
-
-const logout = () => {
-  authStore.logout()
-  router.push('/login')
-}
 </script>
 
 <style>
 #app {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
 }
 
-main {
+.main-content {
   flex: 1;
+  padding: 0;
+  min-height: calc(100vh - 140px); /* Account for footer */
 }
 
-.navbar-brand {
-  font-weight: bold;
+.main-content.with-navbar {
+  margin-top: 0; /* Navbar is positioned relative, no need for top margin */
 }
 
-.nav-link {
-  transition: all 0.3s ease;
+.main-content.without-navbar {
+  min-height: 100vh; /* Full height when no navbar */
 }
 
-.nav-link:hover {
-  transform: translateY(-1px);
+.content-wrapper {
+  width: 100%;
+  min-height: 500px; /* Ensure some minimum height */
 }
 
-.router-link-active {
-  font-weight: bold;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0.375rem;
+/* Footer Styling */
+.medical-footer {
+  background: var(--bg-tertiary);
+  border-top: 1px solid var(--bg-accent);
+  padding: 2rem 0;
+  margin-top: auto;
+  color: var(--text-secondary);
+}
+
+.medical-footer .btn-outline-primary {
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Page Transitions */
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.router-view {
+  animation: fadeIn 0.3s ease-out;
 }
 </style>

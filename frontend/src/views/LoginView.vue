@@ -2,48 +2,64 @@
   <div class="login-container">
     <div class="row justify-content-center w-100">
       <div class="col-12 col-sm-10 col-md-8 col-lg-5 col-xl-4">
-        <div class="card shadow-lg">
-          <div class="card-body p-4 p-md-5">
-            <div class="text-center mb-4">
-              <i class="bi bi-hospital-fill text-primary d-block mb-3" style="font-size: 3.5rem;"></i>
-              <h2 class="card-title h3 h-md-2 mb-2">Ιατρική Εφαρμογή</h2>
-              <p class="text-muted small">Medical Application</p>
+        <div class="medical-card fade-in">
+          <div class="medical-card-body p-4 p-md-5">
+            <div class="text-center mb-5">
+              <div class="login-icon-container mb-4">
+                <i class="bi bi-hospital-fill" style="font-size: 4rem; color: var(--medical-blue);"></i>
+                <div class="icon-pulse"></div>
+              </div>
+              <h1 class="login-title mb-2">MedicalApp Pro</h1>
+              <p class="login-subtitle">Professional Healthcare Management System</p>
+              <div class="security-badges mt-3">
+                <span class="badge bg-success me-2">
+                  <i class="bi bi-shield-fill-check me-1"></i>Secure
+                </span>
+                <span class="badge bg-info">
+                  <i class="bi bi-lock-fill me-1"></i>HIPAA Compliant
+                </span>
+              </div>
             </div>
 
-            <form @submit.prevent="handleLogin">
-              <div class="mb-3">
-                <label for="username" class="form-label">Όνομα Χρήστη</label>
+            <form @submit.prevent="handleLogin" class="login-form">
+              <div class="form-group mb-4">
+                <label for="username" class="form-label">
+                  <i class="bi bi-person-fill me-2"></i>Όνομα Χρήστη
+                </label>
                 <input
                   type="text"
-                  class="form-control"
+                  class="form-control medical-input"
                   id="username"
                   v-model="username"
                   required
-                  placeholder="Εισάγετε το όνομα χρήστη"
+                  placeholder="Εισάγετε το όνομα χρήστη σας"
                   :disabled="loading"
                 />
               </div>
 
-              <div class="mb-3">
-                <label for="password" class="form-label">Κωδικός Πρόσβασης</label>
+              <div class="form-group mb-4">
+                <label for="password" class="form-label">
+                  <i class="bi bi-lock-fill me-2"></i>Κωδικός Πρόσβασης
+                </label>
                 <input
                   type="password"
-                  class="form-control"
+                  class="form-control medical-input"
                   id="password"
                   v-model="password"
                   required
-                  placeholder="Εισάγετε τον κωδικό"
+                  placeholder="Εισάγετε τον κωδικό πρόσβασης"
                   :disabled="loading"
                 />
               </div>
 
-              <div class="alert alert-danger" v-if="authStore.error">
+              <div class="alert alert-danger slide-up" v-if="authStore.error">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 {{ authStore.error }}
               </div>
 
               <button
                 type="submit"
-                class="btn btn-primary w-100"
+                class="btn btn-primary w-100 login-btn"
                 :disabled="loading"
               >
                 <span v-if="loading">
@@ -56,16 +72,31 @@
               </button>
             </form>
 
-            <div class="mt-3 mt-md-4 p-3 bg-light rounded">
-              <small class="text-muted d-block">
-                <strong>Δοκιμαστικοί Λογαριασμοί:</strong>
-              </small>
-              <small class="text-muted d-block mt-2">
-                Νοσηλευτής: <code>nurse1</code> / <code>password123</code>
-              </small>
-              <small class="text-muted d-block">
-                Ασθενής: <code>patient1</code> / <code>password123</code>
-              </small>
+            <div class="demo-section">
+              <div class="text-center">
+                <i class="bi bi-info-circle-fill text-info me-2"></i>
+                <strong>Δοκιμαστικοί Λογαριασμοί</strong>
+              </div>
+              <div class="demo-accounts">
+                <div class="demo-account" @click="fillCredentials('nurse1', 'password123')">
+                  <div class="demo-role">
+                    <i class="bi bi-person-fill-check text-primary"></i>
+                    <span>Νοσηλευτής</span>
+                  </div>
+                  <div class="demo-credentials">
+                    nurse1 / password123
+                  </div>
+                </div>
+                <div class="demo-account" @click="fillCredentials('patient1', 'password123')">
+                  <div class="demo-role">
+                    <i class="bi bi-person-fill text-success"></i>
+                    <span>Ασθενής</span>
+                  </div>
+                  <div class="demo-credentials">
+                    patient1 / password123
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -99,15 +130,8 @@ const handleLogin = async () => {
     console.log('Is Patient:', authStore.isPatient)
     
     if (success) {
-      if (authStore.isNurse) {
-        console.log('Redirecting to /patients')
-        await router.push('/patients')
-      } else if (authStore.isPatient) {
-        console.log('Redirecting to /patients/' + authStore.user.patient_id)
-        await router.push(`/patients/${authStore.user.patient_id}`)
-      } else {
-        console.error('Unknown user role:', authStore.user?.role)
-      }
+      console.log('Login successful, redirecting to dashboard')
+      await router.push('/dashboard')
     } else {
       console.error('Login failed:', authStore.error)
     }
@@ -117,27 +141,88 @@ const handleLogin = async () => {
     loading.value = false
   }
 }
+
+const fillCredentials = (user, pass) => {
+  username.value = user
+  password.value = pass
+}
 </script>
 
 <style scoped>
 .login-container {
+  background: linear-gradient(135deg, var(--medical-blue) 0%, var(--medical-blue-light) 50%, var(--medical-blue-dark) 100%);
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 1rem;
+  padding: 2rem 1rem;
+  position: relative;
 }
 
-.card {
-  border: none;
-  border-radius: 15px;
-  animation: fadeInUp 0.5s ease-out;
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)" /></svg>');
+  opacity: 0.3;
 }
 
-.card-title {
-  color: #333;
-  font-weight: 600;
+.medical-card {
+  position: relative;
+  z-index: 1;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-icon-container {
+  position: relative;
+  display: inline-block;
+}
+
+.icon-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6rem;
+  height: 6rem;
+  border: 2px solid var(--medical-blue-light);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+  opacity: 0.6;
+}
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.6;
+  }
+}
+
+.login-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #4a90e2 !important;
+  margin-bottom: 0.5rem;
+}
+
+.login-subtitle {
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-bottom: 0;
 }
 
 .form-control {

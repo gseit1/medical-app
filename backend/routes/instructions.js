@@ -6,7 +6,8 @@ const {
   completeInstruction,
   getInstructionsByPatient,
   createInstruction,
-  verifySafety
+  verifySafety,
+  checkMedicationCompleted
 } = require('../controllers/instructionController_mongo');
 const { authenticateToken, requireNurse } = require('../middleware/auth');
 
@@ -18,6 +19,9 @@ router.post('/verify-by-id', verifyBarcodeById);
 
 // POST /api/instructions/verify-safety - Safety verification: check if barcode matches patient's medication
 router.post('/verify-safety', authenticateToken, verifySafety);
+
+// POST /api/instructions/check-completed - Check if medication is already completed
+router.post('/check-completed', authenticateToken, checkMedicationCompleted);
 
 // PATCH /api/instructions/:id/complete - Mark instruction as completed
 router.patch('/:id/complete', authenticateToken, completeInstruction);
