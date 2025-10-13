@@ -98,10 +98,16 @@
           <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
             <div class="user-profile-card">
               <div class="profile-avatar">
-                <i class="bi bi-person-circle"></i>
+                <img 
+                  v-if="authStore.user?.profile_image" 
+                  :src="authStore.user.profile_image" 
+                  :alt="authStore.user.full_name || authStore.user.username"
+                  class="profile-image-dashboard"
+                >
+                <i v-else class="bi bi-person-circle"></i>
               </div>
               <div class="profile-info">
-                <h4>{{ authStore.user?.username }}</h4>
+                <h4>{{ authStore.user?.full_name || authStore.user?.username }}</h4>
                 <span class="role-badge" :class="getRoleBadgeClass">
                   <i :class="getRoleIcon"></i>
                   {{ authStore.user?.role === 'nurse' ? 'Νοσηλευτής' : 'Ασθενής' }}
@@ -795,6 +801,23 @@ onBeforeUnmount(() => {
 .profile-avatar i {
   font-size: 4rem;
   opacity: 0.9;
+}
+
+/* Profile Image Styling for Dashboard */
+.profile-image-dashboard {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.profile-image-dashboard:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
 }
 
 .profile-info h4 {

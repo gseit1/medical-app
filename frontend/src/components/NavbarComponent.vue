@@ -55,6 +55,14 @@
             </router-link>
           </li>
 
+          <!-- Medical Instructions -->
+          <li class="nav-item" v-if="authStore.user?.role === 'nurse'">
+            <router-link class="nav-link nav-link-pro" to="/medical-instructions" @click="closeNavbar">
+              <i class="bi bi-clipboard2-pulse"></i>
+              <span>Ιατρικές Οδηγίες</span>
+            </router-link>
+          </li>
+
           <!-- QR Generator -->
           <li class="nav-item">
             <router-link class="nav-link nav-link-pro" to="/barcodes" @click="closeNavbar">
@@ -83,10 +91,16 @@
               aria-expanded="false"
             >
               <div class="user-avatar">
-                <i class="bi bi-person-circle"></i>
+                <img 
+                  v-if="authStore.user?.profile_image" 
+                  :src="authStore.user.profile_image" 
+                  :alt="authStore.user.full_name || authStore.user.username"
+                  class="profile-image"
+                >
+                <i v-else class="bi bi-person-circle default-avatar"></i>
               </div>
               <div class="user-info">
-                <span class="user-name">{{ authStore.user?.username }}</span>
+                <span class="user-name">{{ authStore.user?.full_name || authStore.user?.username }}</span>
                 <span class="user-role">
                   {{ authStore.user?.role === 'nurse' ? 'Νοσηλευτής' : 'Ασθενής' }}
                 </span>
@@ -393,6 +407,28 @@ onMounted(() => {
 }
 
 .user-avatar i {
+  font-size: 1.75rem;
+  color: #ffffff;
+}
+
+/* Profile Image Styling */
+.profile-image {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.profile-image:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+.default-avatar {
   font-size: 1.75rem;
   color: #ffffff;
 }
