@@ -6,6 +6,10 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  name: {
+    type: String,
+    required: true
+  },
   amka: {
     type: String,
     required: true,
@@ -19,6 +23,27 @@ const patientSchema = new mongoose.Schema({
   blood_type: {
     type: String,
     required: true
+  },
+  age: {
+    type: Number,
+    required: true
+  },
+  gender: {
+    type: String,
+    enum: ['Άνδρας', 'Γυναίκα'],
+    required: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  profile_image: {
+    type: String,
+    default: null
+  },
+  medical_history: {
+    type: String,
+    default: null
   }
 }, {
   timestamps: true // Automatically adds createdAt and updatedAt
@@ -83,6 +108,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  full_name: {
+    type: String,
+    required: true
+  },
   password: {
     type: String,
     required: true
@@ -91,6 +120,32 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['nurse', 'patient'],
     required: true
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  phone: {
+    type: String,
+    required: true
+  },
+  profile_image: {
+    type: String,
+    default: null
+  },
+  department: {
+    type: String,
+    default: null
+  },
+  specialization: {
+    type: String,
+    default: null
+  },
+  employee_id: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   patient_id: {
     type: mongoose.Schema.Types.ObjectId,

@@ -226,6 +226,25 @@
                     <span class="metric-value">28%</span>
                   </div>
                 </div>
+                
+                <!-- Testing Controls -->
+                <div class="testing-controls mt-3" v-if="authStore.user?.role === 'nurse'">
+                  <div class="alert alert-info mb-2">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small><strong>Λειτουργίες Δοκιμών</strong></small>
+                  </div>
+                  <button 
+                    class="btn btn-outline-warning btn-sm w-100"
+                    @click="resetAllMedicationStatuses"
+                    :disabled="resettingStatuses"
+                  >
+                    <i class="bi bi-arrow-counterclockwise me-2"></i>
+                    {{ resettingStatuses ? 'Επαναφορά...' : 'Επαναφορά Φαρμάκων σε Pending' }}
+                  </button>
+                  <small class="text-muted d-block mt-1">
+                    Επαναφέρει όλα τα φάρμακα σε κατάσταση "Εκκρεμή" για νέες δοκιμές
+                  </small>
+                </div>
               </div>
             </div>
           </div>
@@ -490,6 +509,36 @@ const weatherInfo = ref({
   condition: 'sunny',
   icon: 'bi bi-sun-fill'
 })
+const resettingStatuses = ref(false)
+
+// Reset all medication statuses to Pending (for testing)
+const resetAllMedicationStatuses = async () => {
+  if (!confirm('Είστε σίγουροι ότι θέλετε να επαναφέρετε όλα τα φάρμακα σε κατάσταση "Εκκρεμή";\n\nΑυτή η λειτουργία είναι για δοκιμές και θα επαναφέρει ΟΛΑ τα φάρμακα όλων των ασθενών.')) {
+    return
+  }
+  
+  try {
+    resettingStatuses.value = true
+    
+    const response = await api.post('/instructions/reset-all-status')
+    
+    if (response.data.success) {
+      alert(`✅ Επιτυχής επαναφορά!\n\n${response.data.message}\n\nΌλα τα φάρμακα είναι τώρα σε κατάσταση "Εκκρεμή" και μπορείτε να τα δοκιμάσετε ξανά.`)
+      
+      // Reload patient data
+      if (authStore.user?.role === 'nurse') {
+        const patientsResponse = await api.get('/patients')
+        patients.value = patientsResponse.data || []
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error resetting medication statuses:', error)
+    alert('❌ Σφάλμα κατά την επαναφορά των φαρμάκων.\n\nΠαρακαλώ δοκιμάστε ξανά.')
+  } finally {
+    resettingStatuses.value = false
+  }
+}
 
 // Computed methods for enhanced UI
 const getGreeting = computed(() => {
@@ -1552,6 +1601,43 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Testing Controls */
+.testing-controls {
+  padding-top: 1rem;
+  border-top: 1px dashed #e5e7eb;
+}
+
+.testing-controls .alert-info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  color: white;
+  padding: 0.5rem 0.75rem;
+}
+
+.testing-controls .btn-outline-warning {
+  border: 2px solid #f59e0b;
+  color: #f59e0b;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.testing-controls .btn-outline-warning:hover:not(:disabled) {
+  background: #f59e0b;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.testing-controls .btn-outline-warning:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.testing-controls small {
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
 /* Responsive Enhancements */
 @media (max-width: 768px) {
   .activity-section {
@@ -1580,6 +1666,10 @@ onBeforeUnmount(() => {
   .typing-text {
     animation: none;
     white-space: normal;
+  }
+  
+  .testing-controls {
+    margin-top: 1rem;
   }
 }
 </style>

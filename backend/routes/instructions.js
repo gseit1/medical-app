@@ -7,7 +7,8 @@ const {
   getInstructionsByPatient,
   createInstruction,
   verifySafety,
-  checkMedicationCompleted
+  checkMedicationCompleted,
+  resetAllMedicationsStatus
 } = require('../controllers/instructionController_mongo');
 const { authenticateToken, requireNurse } = require('../middleware/auth');
 
@@ -31,5 +32,8 @@ router.get('/patient/:patientId', authenticateToken, getInstructionsByPatient);
 
 // POST /api/instructions - Create new instruction (nurse only)
 router.post('/', authenticateToken, requireNurse, createInstruction);
+
+// POST /api/instructions/reset-all-status - Reset all medications to Pending (for testing)
+router.post('/reset-all-status', authenticateToken, requireNurse, resetAllMedicationsStatus);
 
 module.exports = router;

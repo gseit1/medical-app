@@ -164,11 +164,21 @@
                   <td class="table-cell">
                     <div class="patient-info">
                       <div class="patient-avatar">
-                        <i class="bi bi-person-circle"></i>
+                        <img 
+                          v-if="patient.profile_image" 
+                          :src="patient.profile_image" 
+                          :alt="patient.full_name"
+                          class="patient-profile-image"
+                          @error="handleImageError"
+                        >
+                        <i v-else class="bi bi-person-circle"></i>
                       </div>
                       <div class="patient-details">
                         <div class="patient-name">{{ patient.full_name }}</div>
-                        <div class="patient-meta">ID: {{ patient.id }}</div>
+                        <div class="patient-meta">
+                          <span>ID: {{ patient.id }}</span>
+                          <span v-if="patient.age" class="age-badge">{{ patient.age }} ετών</span>
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -231,11 +241,21 @@
                  :style="{ animationDelay: (index * 0.1) + 's' }">
               <div class="mobile-card-header">
                 <div class="patient-avatar-mobile">
-                  <i class="bi bi-person-circle"></i>
+                  <img 
+                    v-if="patient.profile_image" 
+                    :src="patient.profile_image" 
+                    :alt="patient.full_name"
+                    class="patient-profile-image-mobile"
+                    @error="handleImageError"
+                  >
+                  <i v-else class="bi bi-person-circle"></i>
                 </div>
                 <div class="patient-info-mobile">
                   <h6 class="patient-name-mobile">{{ patient.full_name }}</h6>
-                  <span class="patient-id-mobile">ID: {{ patient.id }}</span>
+                  <span class="patient-id-mobile">
+                    ID: {{ patient.id }}
+                    <span v-if="patient.age" class="age-badge-mobile">{{ patient.age }} ετών</span>
+                  </span>
                 </div>
                 <span class="blood-type-badge-mobile" :class="getBloodTypeClass(patient.blood_type)">
                   {{ patient.blood_type || 'N/A' }}
@@ -368,7 +388,16 @@ const fetchPatients = async () => {
     loading.value = true
     error.value = null
     const response = await api.get('/patients')
-    patients.value = response.data
+    
+    // Handle the new MongoDB API response structure
+    if (response.data.success && response.data.patients) {
+      patients.value = response.data.patients
+    } else {
+      // Fallback for legacy response format
+      patients.value = response.data || []
+    }
+    
+    console.log('✅ Loaded patients with images:', patients.value.length)
   } catch (err) {
     error.value = err.response?.data?.message || 'Σφάλμα φόρτωσης ασθενών'
     console.error('Error fetching patients:', err)
@@ -401,6 +430,17 @@ const copyToClipboard = async (text) => {
     console.log('Copied to clipboard:', text)
   } catch (err) {
     console.error('Failed to copy:', err)
+  }
+}
+
+const handleImageError = (event) => {
+  // Replace broken image with default icon
+  event.target.style.display = 'none'
+  const parentDiv = event.target.parentNode
+  if (!parentDiv.querySelector('.bi-person-circle')) {
+    const icon = document.createElement('i')
+    icon.className = 'bi bi-person-circle'
+    parentDiv.appendChild(icon)
   }
 }
 
@@ -906,6 +946,15 @@ onMounted(() => {
   justify-content: center;
   color: white;
   font-size: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.patient-profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .patient-name {
@@ -917,6 +966,20 @@ onMounted(() => {
 .patient-meta {
   font-size: 0.8rem;
   color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.age-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
 }
 
 .code-field {
@@ -1042,6 +1105,15 @@ onMounted(() => {
   justify-content: center;
   color: white;
   font-size: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.patient-profile-image-mobile {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .patient-info-mobile {
@@ -1059,6 +1131,20 @@ onMounted(() => {
 .patient-id-mobile {
   color: #6b7280;
   font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.age-badge-mobile {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  display: inline-block;
+  width: fit-content;
 }
 
 .blood-type-badge-mobile {

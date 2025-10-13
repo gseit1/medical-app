@@ -108,8 +108,12 @@
                     class="patient-card-modern"
                     @click="selectPatient(patient)"
                   >
-                    <div class="patient-avatar">
-                      <i class="bi bi-person-fill"></i>
+                    <div class="patient-avatar" :class="{ 'has-image': patient.profile_image }">
+                      <img v-if="patient.profile_image" 
+                           :src="patient.profile_image" 
+                           :alt="patient.full_name"
+                           class="avatar-image">
+                      <i v-else class="bi bi-person-fill"></i>
                       <div class="online-indicator"></div>
                     </div>
                     
@@ -193,8 +197,12 @@
               <div class="card-body-modern">
                 <!-- Selected Patient Banner -->
                 <div class="patient-banner">
-                  <div class="patient-avatar-large">
-                    <i class="bi bi-person-fill"></i>
+                  <div class="patient-avatar-large" :class="{ 'has-image': selectedPatient.profile_image }">
+                    <img v-if="selectedPatient.profile_image" 
+                         :src="selectedPatient.profile_image" 
+                         :alt="selectedPatient.full_name"
+                         class="avatar-image-large">
+                    <i v-else class="bi bi-person-fill"></i>
                   </div>
                   <div class="patient-details-large">
                     <h3>{{ selectedPatient.full_name }}</h3>
@@ -405,24 +413,124 @@
               </div>
 
               <!-- ERROR: Wrong Medication or Safety Issue -->
-              <div v-else class="alert alert-danger">
+              <div v-else class="alert" :class="getSeverityClass(verificationResult.severity)">
                 <div class="d-flex align-items-center mb-3">
-                  <i class="bi bi-exclamation-triangle-fill fs-3 me-3 text-danger"></i>
+                  <i class="fs-3 me-3" :class="getAlertIcon(verificationResult.alertType)"></i>
                   <div>
-                    <h5 class="mb-1">❌ ΠΡΟΣΟΧΗ - ΛΑΘΟΣ ΦΑΡΜΑΚΟ</h5>
-                    <p class="mb-0">{{ verificationResult.message }}</p>
+                    <h5 class="mb-1">{{ verificationResult.message }}</h5>
+                    <p class="mb-0 fw-bold">{{ verificationResult.details }}</p>
                   </div>
                 </div>
                 
-                <!-- Safety Instructions -->
-                <div class="bg-light p-3 rounded">
-                  <h6 class="text-danger">Οδηγίες Ασφαλείας:</h6>
-                  <ul class="mb-0">
-                    <li>ΜΗΝ χορηγήσετε αυτό το φάρμακο</li>
-                    <li>Ελέγξτε ξανά την ταυτότητα του ασθενή</li>
-                    <li>Βεβαιωθείτε ότι έχετε το σωστό φάρμακο</li>
-                    <li>Συμβουλευθείτε τον επιβλέποντα ιατρό</li>
-                  </ul>
+                <!-- Safety Instructions based on Alert Type -->
+                <div class="bg-light p-3 rounded mt-3">
+                  <h6 class="text-danger">
+                    <i class="bi bi-shield-exclamation"></i> Οδηγίες Ασφαλείας:
+                  </h6>
+                  
+                  <!-- Drug Interaction Alert -->
+                  <div v-if="verificationResult.alertType === 'DRUG_INTERACTION'">
+                    <div class="alert alert-danger mb-2">
+                      <strong>🚨 ΚΡΙΤΙΚΗ ΑΝΤΕΝΔΕΙΞΗ:</strong> Συνχορήγηση Φαρμάκων
+                    </div>
+                    <ul class="mb-2">
+                      <li><strong>ΜΗΝ</strong> χορηγήσετε αυτό το φάρμακο</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Επικοινωνήστε άμεσα με τον θεράποντα ιατρό</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Allergy Alert -->
+                  <div v-else-if="verificationResult.alertType === 'ALLERGY'">
+                    <div class="alert alert-danger mb-2">
+                      <strong>🚨 ΑΛΛΕΡΓΙΑ ΑΣΘΕΝΗ:</strong> Κίνδυνος Αναφυλακτικής Αντίδρασης
+                    </div>
+                    <ul class="mb-2">
+                      <li><strong>ΑΠΑΓΟΡΕΥΕΤΑΙ</strong> η χορήγηση - Αλλεργία ασθενή</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Ενημερώστε άμεσα τον ιατρό</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Duplicate Medication Alert -->
+                  <div v-else-if="verificationResult.alertType === 'DUPLICATE'">
+                    <div class="alert alert-warning mb-2">
+                      <strong>⚠️ ΔΙΠΛΗ ΔΟΣΗ:</strong> Ήδη Χορηγηθέν Φάρμακο
+                    </div>
+                    <ul class="mb-2">
+                      <li>Το φάρμακο έχει ήδη χορηγηθεί σήμερα</li>
+                      <li>Ελέγξτε το ιστορικό χορηγήσεων</li>
+                      <li>Επιβεβαιώστε με τον ιατρό πριν συνεχίσετε</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Wrong Medication Alert -->
+                  <div v-else-if="verificationResult.alertType === 'WRONG_MEDICATION'">
+                    <div class="alert alert-danger mb-2">
+                      <strong>🚨 ΛΑΘΟΣ ΦΑΡΜΑΚΟ:</strong> Μη Αντιστοιχία με Εντολή Ιατρού
+                    </div>
+                    <ul class="mb-2">
+                      <li><strong>ΣΤΑΜΑΤΗΣΤΕ</strong> - Το σαρωμένο φάρμακο δεν αντιστοιχεί</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Βρείτε το σωστό φάρμακο πριν συνεχίσετε</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Overdose Alert -->
+                  <div v-else-if="verificationResult.alertType === 'OVERDOSE'">
+                    <div class="alert alert-danger mb-2">
+                      <strong>🚨 ΥΠΕΡΔΟΣΟΛΟΓΙΑ:</strong> Δόση Υπερβαίνει τα Όρια Ασφαλείας
+                    </div>
+                    <ul class="mb-2">
+                      <li><strong>ΜΗΝ ΧΟΡΗΓΗΣΕΤΕ</strong> - Υπερβολική δόση</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Επικοινωνήστε άμεσα με τον ιατρό για διόρθωση</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Wrong Timing Alert -->
+                  <div v-else-if="verificationResult.alertType === 'WRONG_TIME'">
+                    <div class="alert alert-warning mb-2">
+                      <strong>⚠️ ΛΑΘΟΣ ΧΡΟΝΟΣ:</strong> Εκτός Παραθύρου Ασφαλείας
+                    </div>
+                    <ul class="mb-2">
+                      <li>Η χορήγηση είναι εκτός του προγραμματισμένου χρόνου</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Καταγράψτε την απόκλιση στο σύστημα</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Wrong Route Alert -->
+                  <div v-else-if="verificationResult.alertType === 'WRONG_ROUTE'">
+                    <div class="alert alert-danger mb-2">
+                      <strong>🚨 ΛΑΘΟΣ ΟΔΟΣ ΧΟΡΗΓΗΣΗΣ:</strong> P.O. vs IV
+                    </div>
+                    <ul class="mb-2">
+                      <li><strong>ΣΤΑΜΑΤΗΣΤΕ</strong> - Το σκεύασμα δεν αντιστοιχεί στην οδό</li>
+                      <li>{{ verificationResult.recommendation }}</li>
+                      <li>Βρείτε το σωστό σκεύασμα</li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Generic Error -->
+                  <div v-else>
+                    <ul class="mb-0">
+                      <li><strong>ΜΗΝ</strong> χορηγήσετε αυτό το φάρμακο</li>
+                      <li>Ελέγξτε ξανά την ταυτότητα του ασθενή</li>
+                      <li>Βεβαιωθείτε ότι έχετε το σωστό φάρμακο</li>
+                      <li>Συμβουλευθείτε τον επιβλέποντα ιατρό</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-3 d-flex gap-2">
+                  <button class="btn btn-danger" @click="contactPhysician">
+                    <i class="bi bi-telephone-fill"></i> Επικοινωνία με Ιατρό
+                  </button>
+                  <button class="btn btn-outline-secondary" @click="scanNextMedication">
+                    <i class="bi bi-arrow-clockwise"></i> Νέα Σάρωση
+                  </button>
                 </div>
               </div>
             </div>
@@ -560,8 +668,12 @@
                 <span class="label">Δοσολογία:</span>
                 <span class="value">{{ verificationResult.instruction?.dosage }}</span>
               </div>
+              <div class="detail-item" v-if="verificationResult.instruction?.frequency">
+                <span class="label">Συχνότητα:</span>
+                <span class="value">{{ verificationResult.instruction?.frequency }}</span>
+              </div>
               <div class="detail-item">
-                <span class="label">Οδηγίες:</span>
+                <span class="label">Πλήρης Οδηγία:</span>
                 <span class="value">{{ verificationResult.instruction?.description }}</span>
               </div>
               <div class="detail-item">
@@ -599,13 +711,69 @@
           <!-- Error Modal -->
           <div v-if="modalType === 'error' && verificationResult">
             <h3 class="modal-title error-title">❌ Σφάλμα Επαλήθευσης</h3>
+            
+            <!-- Alert Type Badge -->
+            <div v-if="verificationResult.alertType" class="alert-type-badge" :class="getSeverityClass(verificationResult.severity)">
+              <i :class="getAlertIcon(verificationResult.alertType)"></i>
+              <span>{{ getAlertTypeText(verificationResult.alertType) }}</span>
+            </div>
+            
+            <!-- Main Message -->
             <div class="safety-status error-status">
               <i class="bi bi-shield-exclamation"></i>
               {{ verificationResult.message }}
             </div>
-            <div v-if="verificationResult.safetyError" class="safety-warning">
-              <i class="bi bi-exclamation-triangle"></i>
-              <strong>Προσοχή:</strong> Εντοπίστηκε πιθανό πρόβλημα ασφάλειας!
+            
+            <!-- Detailed Information -->
+            <div v-if="verificationResult.details" class="alert-details-section">
+              <h4 class="details-title">
+                <i class="bi bi-info-circle-fill"></i>
+                Λεπτομέρειες:
+              </h4>
+              <p class="details-text">{{ verificationResult.details }}</p>
+            </div>
+            
+            <!-- Recommendation -->
+            <div v-if="verificationResult.recommendation" class="alert-recommendation-section">
+              <h4 class="recommendation-title">
+                <i class="bi bi-lightbulb-fill"></i>
+                Συνιστώμενη Ενέργεια:
+              </h4>
+              <p class="recommendation-text">{{ verificationResult.recommendation }}</p>
+            </div>
+            
+            <!-- Medication Information -->
+            <div v-if="verificationResult.instruction" class="verification-details mt-3">
+              <div class="detail-item">
+                <span class="label">Ασθενής:</span>
+                <span class="value">{{ selectedPatient?.full_name }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Φάρμακο:</span>
+                <span class="value">{{ verificationResult.instruction?.medication_name || verificationResult.instruction?.description }}</span>
+              </div>
+              <div class="detail-item" v-if="verificationResult.instruction?.dosage">
+                <span class="label">Δοσολογία:</span>
+                <span class="value">{{ verificationResult.instruction?.dosage }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">Barcode:</span>
+                <span class="value barcode-text">{{ scannedBarcode }}</span>
+              </div>
+            </div>
+            
+            <!-- Safety Warning -->
+            <div v-if="verificationResult.safetyError" class="safety-warning-critical">
+              <i class="bi bi-exclamation-triangle-fill"></i>
+              <strong>ΚΡΙΣΙΜΟ:</strong> ΜΗΝ χορηγήσετε το φάρμακο χωρίς επιβεβαίωση από θεράποντα ιατρό!
+            </div>
+            
+            <!-- Contact Physician Button -->
+            <div v-if="verificationResult.severity === 'CRITICAL' || verificationResult.severity === 'HIGH'" class="contact-section">
+              <button class="btn btn-warning btn-contact-physician" @click="contactPhysician">
+                <i class="bi bi-telephone-fill me-2"></i>
+                Επικοινωνία με Ιατρό
+              </button>
             </div>
           </div>
 
@@ -628,6 +796,10 @@
               <div class="detail-item" v-if="verificationResult.instruction">
                 <span class="label">Δοσολογία:</span>
                 <span class="value">{{ verificationResult.instruction.dosage }}</span>
+              </div>
+              <div class="detail-item" v-if="verificationResult.instruction?.frequency">
+                <span class="label">Συχνότητα:</span>
+                <span class="value">{{ verificationResult.instruction.frequency }}</span>
               </div>
               <div class="detail-item">
                 <span class="label">Barcode:</span>
@@ -840,6 +1012,54 @@ export default {
       if (meds.total === 0) return 'Χωρίς φάρμακα'
       
       return `${meds.total} συνολικά • ${meds.pending} εκκρεμή • ${meds.completed} ολοκληρώθηκαν`
+    }
+
+    // Get severity CSS class based on alert severity
+    const getSeverityClass = (severity) => {
+      const severityMap = {
+        'CRITICAL': 'alert-danger',
+        'HIGH': 'alert-danger',
+        'MEDIUM': 'alert-warning',
+        'LOW': 'alert-info'
+      }
+      return severityMap[severity] || 'alert-danger'
+    }
+
+    // Get alert icon based on alert type
+    const getAlertIcon = (alertType) => {
+      const iconMap = {
+        'DRUG_INTERACTION': 'bi-exclamation-octagon-fill text-danger',
+        'ALLERGY': 'bi-bandaid-fill text-danger',
+        'DUPLICATE': 'bi-files text-warning',
+        'WRONG_MEDICATION': 'bi-capsule text-danger',
+        'OVERDOSE': 'bi-exclamation-triangle-fill text-danger',
+        'WRONG_TIME': 'bi-clock-fill text-warning',
+        'WRONG_ROUTE': 'bi-sign-turn-right-fill text-danger',
+        'WRONG_PATIENT': 'bi-person-x-fill text-danger',
+        'NOT_FOUND': 'bi-question-circle-fill text-danger'
+      }
+      return iconMap[alertType] || 'bi-exclamation-triangle-fill text-danger'
+    }
+
+    // Get alert type text in Greek
+    const getAlertTypeText = (alertType) => {
+      const textMap = {
+        'DRUG_INTERACTION': 'Φαρμακευτική Αλληλεπίδραση',
+        'ALLERGY': 'Αλλεργία',
+        'DUPLICATE': 'Διπλή Χορήγηση',
+        'WRONG_MEDICATION': 'Λάθος Φάρμακο',
+        'OVERDOSE': 'Υπερβολική Δόση',
+        'WRONG_TIME': 'Λάθος Χρόνος Χορήγησης',
+        'WRONG_ROUTE': 'Λάθος Οδός Χορήγησης',
+        'WRONG_PATIENT': 'Λάθος Ασθενής',
+        'NOT_FOUND': 'Μη Εύρεση Φαρμάκου'
+      }
+      return textMap[alertType] || 'Προειδοποίηση Ασφαλείας'
+    }
+
+    // Contact physician function
+    const contactPhysician = () => {
+      alert('📞 Επικοινωνώντας με τον θεράποντα ιατρό...\n\nΣτην πραγματική εφαρμογή, αυτό θα ανοίξει σύστημα επικοινωνίας ή θα στείλει ειδοποίηση.')
     }
 
     // Select patient and move to step 2
@@ -1114,6 +1334,10 @@ export default {
       completeMedication,
       getStatusClass,
       getStatusText,
+      getSeverityClass,
+      getAlertIcon,
+      getAlertTypeText,
+      contactPhysician,
       patientMedications,
       fetchPatientMedications,
       getPatientMedicationStatus,
@@ -1655,6 +1879,28 @@ export default {
   font-size: 1.5rem;
   color: #64748b;
   position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.patient-avatar.has-image {
+  background: transparent;
+  padding: 0;
+}
+
+.patient-avatar .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  transition: transform 0.3s ease;
+}
+
+.patient-card-modern:hover .patient-avatar .avatar-image {
+  transform: scale(1.05);
 }
 
 .online-indicator {
@@ -1666,6 +1912,7 @@ export default {
   background: #10b981;
   border: 2px solid white;
   border-radius: 50%;
+  z-index: 1;
 }
 
 .patient-info {
@@ -1785,6 +2032,36 @@ export default {
   
   .patient-card-modern {
     padding: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .patient-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+  
+  .patient-avatar .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .patient-avatar-large {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+  
+  .patient-avatar-large .avatar-image-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .medication-status-badge {
+    min-width: 100%;
+    order: 3;
   }
   
   .header-content {
@@ -1800,6 +2077,115 @@ export default {
   .security-features {
     flex-direction: column;
     gap: 0.25rem;
+  }
+  
+  .patient-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .patient-details-large {
+    text-align: center;
+  }
+  
+  .patient-meta {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .patients-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .patient-avatar {
+    width: 55px;
+    height: 55px;
+  }
+  
+  .patient-avatar .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .patient-avatar-large {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .patient-avatar-large .avatar-image-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+/* Small Mobile Responsive */
+@media (max-width: 480px) {
+  .patient-card-modern {
+    padding: 0.75rem;
+    gap: 12px;
+  }
+  
+  .patient-avatar {
+    width: 45px;
+    height: 45px;
+    font-size: 1rem;
+  }
+  
+  .patient-avatar .avatar-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 14px;
+  }
+  
+  .patient-avatar-large {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+  
+  .patient-avatar-large .avatar-image-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 16px;
+  }
+  
+  .patient-name {
+    font-size: 1rem;
+  }
+  
+  .detail-item {
+    font-size: 0.8rem;
+  }
+  
+  .online-indicator {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .medication-status-badge {
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .status-icon {
+    font-size: 1.2rem;
+  }
+  
+  .status-text {
+    font-size: 0.8rem;
+  }
+  
+  .status-subtext {
+    font-size: 0.7rem;
   }
 }
 
@@ -1912,6 +2298,25 @@ export default {
   justify-content: center;
   font-size: 2rem;
   color: white;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.patient-avatar-large.has-image {
+  background: transparent;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  padding: 0;
+}
+
+.patient-avatar-large .avatar-image-large {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 17px;
+  display: block;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .patient-details-large h3 {
@@ -2842,6 +3247,125 @@ export default {
   align-items: center;
   gap: 0.8rem;
   margin-top: 1rem;
+}
+
+.safety-warning-critical {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border: 2px solid #dc3545;
+  border-radius: 15px;
+  padding: 1.25rem;
+  color: #721c24;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+  font-weight: 600;
+  animation: pulse-warning 2s infinite;
+}
+
+@keyframes pulse-warning {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+}
+
+.alert-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.alert-type-badge.alert-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.alert-type-badge.alert-warning {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.alert-details-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-left: 4px solid #0d6efd;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.details-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0d6efd;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.details-text {
+  font-size: 0.95rem;
+  color: #495057;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.alert-recommendation-section {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  border-left: 4px solid #17a2b8;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.recommendation-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #17a2b8;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.recommendation-text {
+  font-size: 0.95rem;
+  color: #0c5460;
+  line-height: 1.6;
+  margin: 0;
+  font-weight: 500;
+}
+
+.contact-section {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.btn-contact-physician {
+  background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+  border: none;
+  color: #212529;
+  font-weight: 700;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  animation: shake 3s infinite;
+}
+
+.btn-contact-physician:hover {
+  background: linear-gradient(135deg, #ff9800 0%, #ff5722 100%);
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
 }
 
 .patient-info {

@@ -25,10 +25,26 @@
           <button class="btn btn-outline-secondary mb-3" @click="$router.back()">
             <i class="bi bi-arrow-left"></i> Επιστροφή
           </button>
-          <h1 class="display-5">
-            <i class="bi bi-person-badge-fill text-primary"></i>
-            {{ patient.full_name }}
-          </h1>
+          <div class="patient-header">
+            <div class="patient-avatar-large">
+              <img 
+                v-if="patient.profile_image" 
+                :src="patient.profile_image" 
+                :alt="patient.full_name"
+                class="patient-profile-image-large"
+                @error="handleImageError"
+              >
+              <i v-else class="bi bi-person-circle"></i>
+            </div>
+            <div class="patient-title-info">
+              <h1 class="display-5 mb-2">{{ patient.full_name }}</h1>
+              <div class="patient-badges">
+                <span v-if="patient.age" class="badge bg-success me-2">{{ patient.age }} ετών</span>
+                <span v-if="patient.gender" class="badge bg-info me-2">{{ patient.gender }}</span>
+                <span v-if="patient.blood_type" class="badge bg-danger">{{ patient.blood_type }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -38,8 +54,18 @@
           <!-- Basic Info Card -->
           <div class="card mb-3">
             <div class="card-header bg-primary text-white">
-              <h5 class="mb-0">
-                <i class="bi bi-person-circle"></i> Στοιχεία Ασθενή
+              <h5 class="mb-0 d-flex align-items-center">
+                <div class="card-avatar-small me-2">
+                  <img 
+                    v-if="patient.profile_image" 
+                    :src="patient.profile_image" 
+                    :alt="patient.full_name"
+                    class="card-profile-image-small"
+                    @error="handleImageError"
+                  >
+                  <i v-else class="bi bi-person-circle"></i>
+                </div>
+                Στοιχεία Ασθενή
               </h5>
             </div>
             <div class="card-body">
@@ -343,17 +369,41 @@ const fetchPatientDetails = async () => {
     error.value = null
     const patientId = route.params.id
     const response = await api.get(`/patients/${patientId}`)
-    patient.value = response.data
     
-    console.log('Patient data loaded:', patient.value)
-    console.log('Medical instructions:', patient.value.medical_instructions)
-    console.log('Instructions count:', patient.value.medical_instructions?.length)
+    console.log('🔍 Full API Response:', response.data)
+    console.log('🔍 Response has success:', response.data.success)
+    console.log('🔍 Response has patient:', response.data.patient)
+    
+    // Handle the new MongoDB API response structure
+    if (response.data.success && response.data.patient) {
+      patient.value = response.data.patient
+      console.log('📝 Using response.data.patient')
+    } else {
+      // Fallback for legacy response format
+      patient.value = response.data
+      console.log('📝 Using response.data (fallback)')
+    }
+    
+    console.log('✅ Patient data loaded with profile image:', patient.value.full_name)
+    console.log('📷 Profile image:', patient.value.profile_image)
+    console.log('💊 Medical instructions:', patient.value.medical_instructions?.length || 0)
     
   } catch (err) {
     error.value = err.response?.data?.message || 'Σφάλμα φόρτωσης στοιχείων ασθενή'
     console.error('Error fetching patient details:', err)
   } finally {
     loading.value = false
+  }
+}
+
+const handleImageError = (event) => {
+  // Replace broken image with default icon
+  event.target.style.display = 'none'
+  const parentDiv = event.target.parentNode
+  if (!parentDiv.querySelector('.bi-person-circle')) {
+    const icon = document.createElement('i')
+    icon.className = 'bi bi-person-circle'
+    parentDiv.appendChild(icon)
   }
 }
 
@@ -655,7 +705,103 @@ label {
   font-size: 0.875rem;
 }
 
+/* Patient Avatar Styles */
+.patient-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.patient-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.patient-avatar-large:hover {
+  transform: scale(1.05);
+}
+
+.patient-info h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.patient-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.patient-badges .badge {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+}
+
+.patient-profile-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.patient-profile-image:hover {
+  transform: scale(1.1);
+}
+
+.patient-profile-image-large {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease;
+}
+
+.patient-profile-image-large:hover {
+  transform: scale(1.1);
+}
+
 /* Mobile responsive */
+@media (max-width: 768px) {
+  .patient-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .patient-avatar-large {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .patient-info h2 {
+    font-size: 1.5rem;
+  }
+  
+  .patient-badges {
+    justify-content: center;
+  }
+}
+
 @media (max-width: 576px) {
   .modal-dialog-custom {
     margin: 0.5rem;
@@ -664,6 +810,21 @@ label {
   .modal-body-custom {
     padding: 1rem;
     max-height: 65vh;
+  }
+  
+  .patient-avatar-large {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .patient-profile-image {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .patient-profile-image-large {
+    width: 40px;
+    height: 40px;
   }
 }
 
