@@ -4,7 +4,7 @@ const { Patient, User } = require('../models');
 const getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find()
-      .select('_id full_name name amka afm blood_type age gender phone profile_image medical_history createdAt')
+      .select('_id full_name name amka afm barcode blood_type age gender phone profile_image medical_history createdAt')
       .sort({ full_name: 1 });
 
     const formattedPatients = patients.map(patient => ({
@@ -13,6 +13,7 @@ const getAllPatients = async (req, res) => {
       name: patient.name || patient.full_name,
       amka: patient.amka,
       afm: patient.afm,
+      barcode: patient.barcode,
       blood_type: patient.blood_type,
       age: patient.age,
       gender: patient.gender,
@@ -41,7 +42,7 @@ const getAllPatientsWithInstructions = async (req, res) => {
     const { MedicalInstruction } = require('../models');
     
     const patients = await Patient.find()
-      .select('_id full_name name amka afm blood_type age gender phone profile_image medical_history createdAt')
+      .select('_id full_name name amka afm barcode blood_type age gender phone profile_image medical_history createdAt')
       .sort({ full_name: 1 });
 
     // Get medical instructions for each patient
@@ -57,6 +58,7 @@ const getAllPatientsWithInstructions = async (req, res) => {
           name: patient.name || patient.full_name,
           amka: patient.amka,
           afm: patient.afm,
+          barcode: patient.barcode,
           blood_type: patient.blood_type,
           age: patient.age,
           gender: patient.gender,
@@ -122,6 +124,7 @@ const getPatientById = async (req, res) => {
       name: patient.name || patient.full_name,
       amka: patient.amka,
       afm: patient.afm,
+      barcode: patient.barcode,
       blood_type: patient.blood_type,
       age: patient.age,
       gender: patient.gender,

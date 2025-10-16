@@ -20,6 +20,11 @@ const patientSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  barcode: {
+    type: String,
+    required: true,
+    unique: true
+  },
   blood_type: {
     type: String,
     required: true
