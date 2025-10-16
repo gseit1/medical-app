@@ -76,6 +76,49 @@
           </div>
         </div>
 
+        <!-- Patient Barcode Section -->
+        <div class="mb-5">
+          <h3 class="mb-3">
+            <i class="bi bi-person-badge"></i> Patient Barcodes
+          </h3>
+          <div class="alert alert-primary">
+            <i class="bi bi-info-circle"></i>
+            <strong>Χρήση:</strong> Σαρώστε αυτά τα barcodes στο Βήμα 1 για να επιλέξετε γρήγορα τον ασθενή.
+          </div>
+          
+          <div class="row g-4">
+            <div
+              v-for="patient in patientBarcodes"
+              :key="patient.barcode"
+              class="col-md-6 col-lg-4"
+            >
+              <div class="card h-100 border-primary">
+                <div class="card-body text-center">
+                  <h6 class="card-title mb-3 text-primary">{{ patient.full_name }}</h6>
+                  <p class="small text-muted mb-3">
+                    <strong>AMKA:</strong> {{ patient.amka }}<br>
+                    <strong>AFM:</strong> {{ patient.afm }}
+                  </p>
+                  
+                  <!-- Patient Barcode using SVG -->
+                  <svg
+                    :id="'patient-barcode-' + patient.barcode"
+                    class="barcode-svg mb-2"
+                  ></svg>
+                  
+                  <code class="d-block small">{{ patient.barcode }}</code>
+                  
+                  <div class="mt-2">
+                    <span class="badge bg-primary">
+                      <i class="bi bi-person"></i> Patient ID
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Traditional Barcode Section -->
         <div class="mb-5">
           <h3 class="mb-3">
@@ -141,6 +184,7 @@ const authStore = useAuthStore()
 const router = useRouter()
 const sampleInstructions = ref([])
 const urlBarcodes = ref([])
+const patientBarcodes = ref([])
 const loading = ref(true)
 const error = ref(null)
 
@@ -159,12 +203,24 @@ const fetchAllData = async () => {
     const patients = response.data
     console.log('Patients received:', patients)
     
-    // Build URL barcodes and sample instructions from real data
+    // Build URL barcodes, sample instructions, and patient barcodes from real data
     const urlBarcodesData = []
     const sampleInstructionsData = []
+    const patientBarcodesData = []
     
     for (const patient of patients) {
       console.log('Processing patient:', patient.full_name, 'Instructions:', patient.medical_instructions?.length || 0)
+      
+      // Add patient barcode
+      if (patient.barcode) {
+        patientBarcodesData.push({
+          barcode: patient.barcode,
+          full_name: patient.full_name,
+          amka: patient.amka,
+          afm: patient.afm
+        })
+      }
+      
       if (patient.medical_instructions && patient.medical_instructions.length > 0) {
         patient.medical_instructions.forEach(instruction => {
           // URL barcode data
@@ -188,9 +244,11 @@ const fetchAllData = async () => {
       }
     }
     
+    console.log('Patient Barcodes generated:', patientBarcodesData.length)
     console.log('URL Barcodes generated:', urlBarcodesData.length)
     console.log('Sample Instructions generated:', sampleInstructionsData.length)
     
+    patientBarcodes.value = patientBarcodesData
     urlBarcodes.value = urlBarcodesData
     sampleInstructions.value = sampleInstructionsData
     
@@ -205,6 +263,21 @@ const fetchAllData = async () => {
 const generateBarcodes = () => {
   // Wait a bit for DOM to update
   setTimeout(() => {
+    // Generate patient barcodes
+    patientBarcodes.value.forEach(patient => {
+      try {
+        JsBarcode(`#patient-barcode-${patient.barcode}`, patient.barcode, {
+          format: 'CODE128',
+          width: 2,
+          height: 80,
+          displayValue: false,
+          margin: 10
+        })
+      } catch (error) {
+        console.error('Error generating patient barcode:', patient.barcode, error)
+      }
+    })
+    
     // Generate traditional barcodes
     sampleInstructions.value.forEach(instruction => {
       try {

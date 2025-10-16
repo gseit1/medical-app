@@ -5,6 +5,7 @@ import DashboardView from '../views/DashboardView.vue'
 import PatientListView from '../views/PatientListView.vue'
 import PatientDetailView from '../views/PatientDetailView.vue'
 import BarcodeGeneratorView from '../views/BarcodeGeneratorView.vue'
+import PatientBarcodesView from '../views/PatientBarcodesView.vue'
 import BarcodeVerifyView from '../views/BarcodeVerifyView.vue'
 import MedicationSafetyView from '../views/MedicationSafetyView.vue'
 import MedicalInstructionsView from '../views/MedicalInstructionsView.vue'
@@ -47,6 +48,12 @@ const routes = [
     name: 'barcodes',
     component: BarcodeGeneratorView,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/patient-barcodes',
+    name: 'patient-barcodes',
+    component: PatientBarcodesView,
+    meta: { requiresAuth: true, requiresNurse: true }
   },
   {
     path: '/verify/:patientId/:instructionId',

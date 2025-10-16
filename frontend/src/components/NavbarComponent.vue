@@ -63,6 +63,14 @@
             </router-link>
           </li>
 
+          <!-- Patient Barcodes -->
+          <li class="nav-item" v-if="authStore.user?.role === 'nurse'">
+            <router-link class="nav-link nav-link-pro" to="/patient-barcodes" @click="closeNavbar">
+              <i class="bi bi-person-badge"></i>
+              <span>Patient Barcodes</span>
+            </router-link>
+          </li>
+
           <!-- QR Generator -->
           <li class="nav-item">
             <router-link class="nav-link nav-link-pro" to="/barcodes" @click="closeNavbar">

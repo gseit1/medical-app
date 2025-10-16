@@ -100,6 +100,32 @@
                   </div>
                 </div>
 
+                <!-- Patient Barcode Scanner -->
+                <div class="patient-scanner-section">
+                  <div class="scanner-card">
+                    <div class="scanner-header-simple">
+                      <i class="bi bi-upc-scan me-2"></i>
+                      <h4>Σάρωση Ασθενή</h4>
+                    </div>
+                    <div class="scanner-body-simple">
+                      <div v-if="!patientBarcodeScanned" class="scanner-active-simple">
+                        <BarcodeScanner @barcode-detected="handlePatientBarcodeDetected" />
+                        <p class="scanner-instruction-simple">
+                          <i class="bi bi-qr-code me-2"></i>
+                          Σαρώστε το barcode του ασθενή για άμεση επιλογή
+                        </p>
+                      </div>
+                      <div v-else class="scanner-result-simple">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span>Ασθενής εντοπίστηκε: {{ patientBarcodeScanned }}</span>
+                        <button class="btn-clear-simple" @click="clearPatientBarcode">
+                          <i class="bi bi-x"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Patients Grid -->
                 <div class="patients-grid" v-if="filteredPatients.length > 0">
                   <div 
@@ -876,6 +902,9 @@ export default {
     const safetyScore = ref(99.8)
     const isScanning = ref(false)
     const scannerActive = ref(false)
+    
+    // Patient barcode scanning in Step 1
+    const patientBarcodeScanned = ref('')
 
     // Modal functionality
     const showVerificationModal = ref(false)
@@ -1239,6 +1268,42 @@ export default {
       error.value = null
     }
 
+    // Handle patient barcode detected in Step 1
+    const handlePatientBarcodeDetected = async (barcode) => {
+      console.log('🎯 Patient barcode detected:', barcode)
+      patientBarcodeScanned.value = barcode
+      
+      // Search for patient by barcode, AMKA, or AFM
+      const patient = patients.value.find(p => 
+        p.barcode === barcode ||
+        p.amka === barcode || 
+        p.afm === barcode ||
+        p.amka.includes(barcode) ||
+        barcode.includes(p.amka)
+      )
+      
+      if (patient) {
+        console.log('✅ Patient found:', patient.full_name)
+        // Automatically select the patient
+        setTimeout(() => {
+          selectPatient(patient)
+        }, 500)
+      } else {
+        console.log('❌ Patient not found for barcode:', barcode)
+        error.value = 'Δεν βρέθηκε ασθενής με αυτό το barcode'
+        setTimeout(() => {
+          error.value = null
+          patientBarcodeScanned.value = ''
+        }, 3000)
+      }
+    }
+
+    // Clear patient barcode
+    const clearPatientBarcode = () => {
+      patientBarcodeScanned.value = ''
+      error.value = null
+    }
+
     // Modal functions
     const closeModal = () => {
       showVerificationModal.value = false
@@ -1372,7 +1437,10 @@ export default {
       patientMedications,
       fetchPatientMedications,
       getPatientMedicationStatus,
-      getMedicationSummary
+      getMedicationSummary,
+      patientBarcodeScanned,
+      handlePatientBarcodeDetected,
+      clearPatientBarcode
     }
   }
 }
@@ -1853,6 +1921,94 @@ export default {
   background: linear-gradient(135deg, #2563eb, #1e40af);
   color: white;
   border-color: #2563eb;
+}
+
+/* Patient Scanner Section in Step 1 */
+.patient-scanner-section {
+  margin: 2rem 0;
+}
+
+.scanner-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #bae6fd;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1);
+}
+
+.scanner-header-simple {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #0369a1;
+  font-weight: 600;
+}
+
+.scanner-header-simple h4 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.scanner-body-simple {
+  background: white;
+  border-radius: 12px;
+  padding: 1rem;
+  min-height: 100px;
+}
+
+.scanner-active-simple {
+  text-align: center;
+}
+
+.scanner-instruction-simple {
+  margin: 1rem 0 0 0;
+  color: #64748b;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.scanner-result-simple {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border-radius: 8px;
+}
+
+.scanner-result-simple i {
+  font-size: 1.5rem;
+}
+
+.scanner-result-simple span {
+  flex: 1;
+  color: #065f46;
+  font-weight: 600;
+}
+
+.btn-clear-simple {
+  background: white;
+  border: 2px solid #10b981;
+  color: #10b981;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-simple:hover {
+  background: #10b981;
+  color: white;
+  transform: rotate(90deg);
 }
 
 /* Patients Grid */
