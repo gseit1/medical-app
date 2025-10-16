@@ -27,14 +27,7 @@
           </button>
           <div class="patient-header">
             <div class="patient-avatar-large">
-              <img 
-                v-if="patient.profile_image" 
-                :src="patient.profile_image" 
-                :alt="patient.full_name"
-                class="patient-profile-image-large"
-                @error="handleImageError"
-              >
-              <i v-else class="bi bi-person-circle"></i>
+              <i class="bi bi-person-circle"></i>
             </div>
             <div class="patient-title-info">
               <h1 class="display-5 mb-2">{{ patient.full_name }}</h1>
@@ -56,14 +49,7 @@
             <div class="card-header bg-primary text-white">
               <h5 class="mb-0 d-flex align-items-center">
                 <div class="card-avatar-small me-2">
-                  <img 
-                    v-if="patient.profile_image" 
-                    :src="patient.profile_image" 
-                    :alt="patient.full_name"
-                    class="card-profile-image-small"
-                    @error="handleImageError"
-                  >
-                  <i v-else class="bi bi-person-circle"></i>
+                  <i class="bi bi-person-circle"></i>
                 </div>
                 Στοιχεία Ασθενή
               </h5>

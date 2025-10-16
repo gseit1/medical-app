@@ -88,7 +88,7 @@
     <div v-else class="scanner-trigger">
       <button class="btn btn-primary btn-lg w-100" @click="startScanner">
         <i class="bi bi-camera me-2"></i> 
-        Σκάρωση με Κάμερα
+        Σάρωση με Κάμερα
       </button>
       
       <!-- Manual Input Option -->

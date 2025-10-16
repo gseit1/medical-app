@@ -123,13 +123,13 @@
                   <th class="table-header-cell">
                     <div class="header-content">
                       <i class="bi bi-credit-card me-1"></i>
-                      Α.M
+                      Α.Μ.Κ.Α
                     </div>
                   </th>
                   <th class="table-header-cell">
                     <div class="header-content">
                       <i class="bi bi-card-text me-1"></i>
-                      Α.Φ.Μ
+                      Α.Μ
                     </div>
                   </th>
                   <th class="table-header-cell">
@@ -164,14 +164,7 @@
                   <td class="table-cell">
                     <div class="patient-info">
                       <div class="patient-avatar">
-                        <img 
-                          v-if="patient.profile_image" 
-                          :src="patient.profile_image" 
-                          :alt="patient.full_name"
-                          class="patient-profile-image"
-                          @error="handleImageError"
-                        >
-                        <i v-else class="bi bi-person-circle"></i>
+                        <i class="bi bi-person-circle"></i>
                       </div>
                       <div class="patient-details">
                         <div class="patient-name">{{ patient.full_name }}</div>
@@ -241,14 +234,7 @@
                  :style="{ animationDelay: (index * 0.1) + 's' }">
               <div class="mobile-card-header">
                 <div class="patient-avatar-mobile">
-                  <img 
-                    v-if="patient.profile_image" 
-                    :src="patient.profile_image" 
-                    :alt="patient.full_name"
-                    class="patient-profile-image-mobile"
-                    @error="handleImageError"
-                  >
-                  <i v-else class="bi bi-person-circle"></i>
+                  <i class="bi bi-person-circle"></i>
                 </div>
                 <div class="patient-info-mobile">
                   <h6 class="patient-name-mobile">{{ patient.full_name }}</h6>
@@ -280,7 +266,7 @@
                   <div class="detail-row">
                     <div class="detail-label">
                       <i class="bi bi-card-text me-1"></i>
-                      ΑΦΜ:
+                      Α.Μ:
                     </div>
                     <div class="detail-value">
                       <code>{{ patient.afm }}</code>

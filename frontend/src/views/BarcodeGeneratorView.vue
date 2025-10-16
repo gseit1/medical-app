@@ -37,7 +37,7 @@
           </h3>
           <div class="alert alert-success">
             <i class="bi bi-phone"></i>
-            <strong>Σκαναρίστε με την κάμερα του τηλεφώνου:</strong> Αυτά τα barcodes περιέχουν URLs που ανοίγουν αυτόματα στον browser και εμφανίζουν το αποτέλεσμα επαλήθευσης.
+            <strong>Σάρωσε με την κάμερα του τηλεφώνου:</strong> Αυτά τα barcodes περιέχουν URLs που ανοίγουν αυτόματα στον browser και εμφανίζουν το αποτέλεσμα επαλήθευσης.
           </div>
           
           <div class="row g-4">

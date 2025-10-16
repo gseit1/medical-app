@@ -55,8 +55,7 @@ async function seedDatabase() {
         role: 'nurse',
         department: 'Παθολογική Κλινική',
         specialization: 'Νοσηλευτική Παθολογίας',
-        employee_id: 'N001',
-        profile_image: nurseImages[0]
+        employee_id: 'N001'
       },
       {
         username: 'anna.nurse', 
@@ -67,8 +66,7 @@ async function seedDatabase() {
         role: 'nurse',
         department: 'Καρδιολογική Κλινική',
         specialization: 'Νοσηλευτική Καρδιολογίας',
-        employee_id: 'N002',
-        profile_image: nurseImages[1]
+        employee_id: 'N002'
       },
       {
         username: 'elena.nurse',
@@ -79,8 +77,7 @@ async function seedDatabase() {
         role: 'nurse',
         department: 'ΜΕΘ',
         specialization: 'Νοσηλευτική Εντατικής Θεραπείας',
-        employee_id: 'N003',
-        profile_image: nurseImages[2]
+        employee_id: 'N003'
       },
       {
         username: 'sophia.nurse',
@@ -91,8 +88,7 @@ async function seedDatabase() {
         role: 'nurse',
         department: 'Χειρουργική Κλινική',
         specialization: 'Περιεγχειρητική Νοσηλευτική',
-        employee_id: 'N004',
-        profile_image: nurseImages[3]
+        employee_id: 'N004'
       },
       {
         username: 'christina.nurse',
@@ -103,8 +99,18 @@ async function seedDatabase() {
         role: 'nurse',
         department: 'Πνευμονολογική Κλινική',
         specialization: 'Νοσηλευτική Πνευμονολογίας',
-        employee_id: 'N005',
-        profile_image: nurseImages[4]
+        employee_id: 'N005'
+      },
+      {
+        username: 'eirini.theologidoy',
+        password: await bcrypt.hash('123456', 12),
+        full_name: 'Ειρήνη Θεολογίδου',
+        email: 'eirini.theologidoy@hospital.gr',
+        phone: '6901234572',
+        role: 'nurse',
+        department: 'Γενική Κλινική',
+        specialization: 'Νοσηλευτική',
+        employee_id: 'N006'
       }
     ];
 
@@ -123,7 +129,6 @@ async function seedDatabase() {
         age: 58,
         gender: 'Άνδρας',
         phone: '6912345678',
-        profile_image: professionalPatientImages[0],
         medical_history: 'I10 Ιδιοπαθής Υπέρταση, E78.0 Καθαρή Υπερχοληστερολαιμία, J18.9 Πνευμονία'
       },
       {
@@ -136,7 +141,6 @@ async function seedDatabase() {
         age: 35,
         gender: 'Γυναίκα',
         phone: '6912345679',
-        profile_image: professionalPatientImages[1],
         medical_history: 'J00 Οξεία ρινοφαρυγγίτιδα, J30.3 Άλλη αλλεργική ρινίτιδα'
       },
       {
@@ -149,7 +153,6 @@ async function seedDatabase() {
         age: 45,
         gender: 'Άνδρας',
         phone: '6912345680',
-        profile_image: professionalPatientImages[2],
         medical_history: 'L03.90 Κυτταρίτιδα, Αλλεργία: Πενικιλίνη'
       },
       {
@@ -162,7 +165,6 @@ async function seedDatabase() {
         age: 62,
         gender: 'Γυναίκα',
         phone: '6912345681',
-        profile_image: professionalPatientImages[3],
         medical_history: 'Z09.0 Μετεγχειρητικός έλεγχος μετά από επέμβαση για άλλη πάθηση'
       },
       {
@@ -175,7 +177,6 @@ async function seedDatabase() {
         age: 28,
         gender: 'Άνδρας',
         phone: '6912345682',
-        profile_image: professionalPatientImages[4],
         medical_history: 'E10.9 Σακχαρώδης Διαβήτης Τύπου 1, μη καθορισμένος με επιπλοκές'
       },
       {
@@ -188,7 +189,6 @@ async function seedDatabase() {
         age: 55,
         gender: 'Γυναίκα',
         phone: '6912345683',
-        profile_image: professionalPatientImages[5],
         medical_history: 'I10 Υπέρταση'
       },
       {
@@ -201,7 +201,6 @@ async function seedDatabase() {
         age: 48,
         gender: 'Άνδρας',
         phone: '6912345684',
-        profile_image: professionalPatientImages[6],
         medical_history: 'E11.9 Σακχαρώδης Διαβήτης Τύπου 2'
       },
       {
@@ -214,13 +213,12 @@ async function seedDatabase() {
         age: 40,
         gender: 'Γυναίκα',
         phone: '6912345685',
-        profile_image: professionalPatientImages[7],
         medical_history: 'N39.0 Λοίμωξη Ουροποιητικού - UTI'
       }
     ];
 
     const createdPatients = await Patient.insertMany(patients);
-    console.log('👥 Created 8 scenario patients with professional images');
+    console.log('👥 Created 8 scenario patients');
 
     // Create medical instructions for each patient according to scenarios
     const instructions = [
@@ -342,10 +340,9 @@ async function seedDatabase() {
     
     console.log('\n👩‍⚕️ Nurses available for login:');
     createdNurses.forEach(nurse => {
-      console.log(`- ${nurse.username} (${nurse.full_name}) - ${nurse.department}`);
+      const password = nurse.username === 'eirini.theologidoy' ? '123456' : 'password123';
+      console.log(`- ${nurse.username} (${nurse.full_name}) - ${nurse.department} - Password: ${password}`);
     });
-    
-    console.log('\n🔑 All nurse passwords: password123');
 
     process.exit(0);
 

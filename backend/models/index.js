@@ -37,10 +37,6 @@ const patientSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  profile_image: {
-    type: String,
-    default: null
-  },
   medical_history: {
     type: String,
     default: null
@@ -129,10 +125,6 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     required: true
-  },
-  profile_image: {
-    type: String,
-    default: null
   },
   department: {
     type: String,

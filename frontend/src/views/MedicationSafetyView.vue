@@ -108,12 +108,8 @@
                     class="patient-card-modern"
                     @click="selectPatient(patient)"
                   >
-                    <div class="patient-avatar" :class="{ 'has-image': patient.profile_image }">
-                      <img v-if="patient.profile_image" 
-                           :src="patient.profile_image" 
-                           :alt="patient.full_name"
-                           class="avatar-image">
-                      <i v-else class="bi bi-person-fill"></i>
+                    <div class="patient-avatar">
+                      <i class="bi bi-person-fill"></i>
                       <div class="online-indicator"></div>
                     </div>
                     
@@ -185,7 +181,7 @@
                   </div>
                   <div class="header-text">
                     <h2>AI-Powered Medication Verification</h2>
-                    <p>Σκαναρίστε το φάρμακο για επαλήθευση ασφαλείας</p>
+                    <p>Σαρώστε το φάρμακο για επαλήθευση ασφαλείας</p>
                   </div>
                   <button class="btn-back" @click="goBackToPatientSelection">
                     <i class="bi bi-arrow-left"></i>
@@ -197,12 +193,8 @@
               <div class="card-body-modern">
                 <!-- Selected Patient Banner -->
                 <div class="patient-banner">
-                  <div class="patient-avatar-large" :class="{ 'has-image': selectedPatient.profile_image }">
-                    <img v-if="selectedPatient.profile_image" 
-                         :src="selectedPatient.profile_image" 
-                         :alt="selectedPatient.full_name"
-                         class="avatar-image-large">
-                    <i v-else class="bi bi-person-fill"></i>
+                  <div class="patient-avatar-large">
+                    <i class="bi bi-person-fill"></i>
                   </div>
                   <div class="patient-details-large">
                     <h3>{{ selectedPatient.full_name }}</h3>
@@ -407,7 +399,7 @@
                 <div class="mt-2" v-if="verificationResult.instruction.status === 'Completed'">
                   <div class="alert alert-info mb-0">
                     <i class="bi bi-info-circle"></i>
-                    Το φάρμακο έχει ήδη χορηγηθεί. Μπορείτε να σκαναρίσετε άλλο φάρμακο για αυτόν τον ασθενή.
+                    Το φάρμακο έχει ήδη χορηγηθεί. Μπορείτε να σκανάρετε άλλο φάρμακο για αυτόν τον ασθενή.
                   </div>
                 </div>
               </div>
@@ -434,7 +426,7 @@
                       <strong>🚨 ΚΡΙΤΙΚΗ ΑΝΤΕΝΔΕΙΞΗ:</strong> Συνχορήγηση Φαρμάκων
                     </div>
                     <ul class="mb-2">
-                      <li><strong>ΜΗΝ</strong> χορηγήσετε αυτό το φάρμακο</li>
+                      <li><strong>ΜΗ</strong> χορηγήσετε αυτό το φάρμακο</li>
                       <li>{{ verificationResult.recommendation }}</li>
                       <li>Επικοινωνήστε άμεσα με τον θεράποντα ιατρό</li>
                     </ul>
@@ -482,7 +474,7 @@
                       <strong>🚨 ΥΠΕΡΔΟΣΟΛΟΓΙΑ:</strong> Δόση Υπερβαίνει τα Όρια Ασφαλείας
                     </div>
                     <ul class="mb-2">
-                      <li><strong>ΜΗΝ ΧΟΡΗΓΗΣΕΤΕ</strong> - Υπερβολική δόση</li>
+                      <li><strong>ΜΗ ΧΟΡΗΓΗΣΕΤΕ</strong> - Υπερβολική δόση</li>
                       <li>{{ verificationResult.recommendation }}</li>
                       <li>Επικοινωνήστε άμεσα με τον ιατρό για διόρθωση</li>
                     </ul>
@@ -515,7 +507,7 @@
                   <!-- Generic Error -->
                   <div v-else>
                     <ul class="mb-0">
-                      <li><strong>ΜΗΝ</strong> χορηγήσετε αυτό το φάρμακο</li>
+                      <li><strong>ΜΗ</strong> χορηγήσετε αυτό το φάρμακο</li>
                       <li>Ελέγξτε ξανά την ταυτότητα του ασθενή</li>
                       <li>Βεβαιωθείτε ότι έχετε το σωστό φάρμακο</li>
                       <li>Συμβουλευθείτε τον επιβλέποντα ιατρό</li>
@@ -765,7 +757,7 @@
             <!-- Safety Warning -->
             <div v-if="verificationResult.safetyError" class="safety-warning-critical">
               <i class="bi bi-exclamation-triangle-fill"></i>
-              <strong>ΚΡΙΣΙΜΟ:</strong> ΜΗΝ χορηγήσετε το φάρμακο χωρίς επιβεβαίωση από θεράποντα ιατρό!
+              <strong>ΚΡΙΣΙΜΟ:</strong> ΜΗ χορηγήσετε το φάρμακο χωρίς επιβεβαίωση από θεράποντα ιατρό!
             </div>
             
             <!-- Contact Physician Button -->
@@ -1117,19 +1109,34 @@ export default {
       try {
         await api.patch(`/instructions/${verificationResult.value.instruction.id}/complete`)
         
+        const completedTime = new Date().toISOString()
+        
         // Update local state with completion timestamp
         if (verificationResult.value.instruction) {
           verificationResult.value.instruction.status = 'Completed'
-          verificationResult.value.instruction.completed_at = new Date().toISOString()
+          verificationResult.value.instruction.completed_at = completedTime
         }
         
-        // Update the instruction in the patient's list
+        // Update the instruction in the patient's list - Create new array to trigger reactivity
         const instructionIndex = selectedPatient.value.medical_instructions.findIndex(
           inst => inst.id === verificationResult.value.instruction.id
         )
         if (instructionIndex !== -1) {
-          selectedPatient.value.medical_instructions[instructionIndex].status = 'Completed'
-          selectedPatient.value.medical_instructions[instructionIndex].completed_at = new Date().toISOString()
+          // Create a new instruction object to ensure Vue detects the change
+          const updatedInstruction = {
+            ...selectedPatient.value.medical_instructions[instructionIndex],
+            status: 'Completed',
+            completed_at: completedTime
+          }
+          
+          // Replace the instruction in the array
+          selectedPatient.value.medical_instructions.splice(instructionIndex, 1, updatedInstruction)
+        }
+        
+        // Update patientMedications count for Step 1
+        if (patientMedications.value[selectedPatient.value.id]) {
+          patientMedications.value[selectedPatient.value.id].pending -= 1
+          patientMedications.value[selectedPatient.value.id].completed += 1
         }
         
         alert('✅ Το φάρμακο χορηγήθηκε επιτυχώς!')
@@ -1250,12 +1257,36 @@ export default {
       try {
         completing.value = true
 
+        const completedTime = new Date().toISOString()
+
         // Call the complete instruction endpoint
         const response = await api.patch(`/instructions/${verificationResult.value.instruction.id}/complete`)
         
         // Update the local verification result
         verificationResult.value.instruction.status = 'Completed'
-        verificationResult.value.instruction.completed_at = new Date().toISOString()
+        verificationResult.value.instruction.completed_at = completedTime
+        
+        // Update the instruction in the patient's list - Create new object to trigger reactivity
+        const instructionIndex = selectedPatient.value.medical_instructions.findIndex(
+          inst => inst.id === verificationResult.value.instruction.id
+        )
+        if (instructionIndex !== -1) {
+          // Create a new instruction object to ensure Vue detects the change
+          const updatedInstruction = {
+            ...selectedPatient.value.medical_instructions[instructionIndex],
+            status: 'Completed',
+            completed_at: completedTime
+          }
+          
+          // Replace the instruction in the array
+          selectedPatient.value.medical_instructions.splice(instructionIndex, 1, updatedInstruction)
+        }
+        
+        // Update patientMedications count for Step 1
+        if (patientMedications.value[selectedPatient.value.id]) {
+          patientMedications.value[selectedPatient.value.id].pending -= 1
+          patientMedications.value[selectedPatient.value.id].completed += 1
+        }
         
         // Update today's verification count
         todayVerifications.value += 1
