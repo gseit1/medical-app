@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/api'
+import socketService from '../services/socket'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -21,6 +22,11 @@ export const useAuthStore = defineStore('auth', () => {
     if (storedToken && storedUser) {
       token.value = storedToken
       user.value = JSON.parse(storedUser)
+      
+      // Connect to socket if user is authenticated
+      if (user.value?.id) {
+        socketService.connect(user.value.id)
+      }
     }
   }
 
@@ -42,6 +48,11 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
       
+      // Connect to socket for real-time synchronization
+      if (response.data.user.id) {
+        socketService.connect(response.data.user.id)
+      }
+      
       console.log('Auth store: Login successful, user:', user.value)
       return true
     } catch (err) {
@@ -60,6 +71,9 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     localStorage.removeItem('token')
     localStorage.removeItem('user')
+    
+    // Disconnect socket
+    socketService.disconnect()
   }
 
   // Initialize on store creation

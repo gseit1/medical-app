@@ -1,8 +1,10 @@
 const express = require('express');
 const https = require('https');
+const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 // MongoDB Configuration
@@ -157,13 +159,113 @@ const initializeApp = async () => {
     await connectDB();
     console.log('✅ MongoDB Connected Successfully');
     
-    // Start HTTP server for development (simplified)
-    app.listen(PORT, '0.0.0.0', () => {
+    // Create HTTP server
+    const server = http.createServer(app);
+    
+    // Initialize Socket.IO with CORS
+    const io = new Server(server, {
+      cors: {
+        origin: function (origin, callback) {
+          // Allow all origins in development
+          if (process.env.NODE_ENV === 'development' || !origin) {
+            return callback(null, true);
+          }
+          // Check allowed origins in production
+          if (allowedOrigins.indexOf(origin) !== -1) {
+            return callback(null, true);
+          }
+          return callback(new Error('Not allowed by CORS'));
+        },
+        methods: ['GET', 'POST'],
+        credentials: true
+      }
+    });
+
+    // Store user sessions: userId -> array of socket IDs
+    const userSessions = new Map();
+
+    // Socket.IO connection handling
+    io.on('connection', (socket) => {
+      console.log('🔌 Client connected:', socket.id);
+
+      // Join user-specific room when authenticated
+      socket.on('authenticate', (userId) => {
+        console.log(`👤 User ${userId} authenticated on socket ${socket.id}`);
+        
+        // Join user-specific room
+        socket.join(`user:${userId}`);
+        
+        // Track user sessions
+        if (!userSessions.has(userId)) {
+          userSessions.set(userId, []);
+        }
+        userSessions.get(userId).push(socket.id);
+        
+        console.log(`📱 User ${userId} now has ${userSessions.get(userId).length} device(s) connected`);
+      });
+
+      // Handle patient selection in Step 1
+      socket.on('patient-selected', ({ userId, patientId, patientName }) => {
+        console.log(`🎯 Patient selected by user ${userId}: ${patientName} (${patientId})`);
+        
+        // Broadcast to all devices of this user
+        socket.to(`user:${userId}`).emit('sync-patient-selected', { patientId, patientName });
+      });
+
+      // Handle medication scan in Step 2
+      socket.on('medication-scanned', ({ userId, patientId, barcode, medicationDescription }) => {
+        console.log(`💊 Medication scanned by user ${userId}: ${barcode}`);
+        
+        // Broadcast to all devices of this user
+        socket.to(`user:${userId}`).emit('sync-medication-scanned', { 
+          patientId, 
+          barcode, 
+          medicationDescription 
+        });
+      });
+
+      // Handle medication completion
+      socket.on('medication-completed', ({ userId, patientId, instructionId }) => {
+        console.log(`✅ Medication completed by user ${userId}`);
+        
+        // Broadcast to all devices of this user
+        socket.to(`user:${userId}`).emit('sync-medication-completed', { 
+          patientId, 
+          instructionId 
+        });
+      });
+
+      // Handle disconnection
+      socket.on('disconnect', () => {
+        console.log('🔌 Client disconnected:', socket.id);
+        
+        // Remove from user sessions
+        userSessions.forEach((sockets, userId) => {
+          const index = sockets.indexOf(socket.id);
+          if (index > -1) {
+            sockets.splice(index, 1);
+            console.log(`📱 User ${userId} now has ${sockets.length} device(s) connected`);
+            
+            // Clean up if no more sockets
+            if (sockets.length === 0) {
+              userSessions.delete(userId);
+            }
+          }
+        });
+      });
+    });
+
+    // Make io available to routes
+    app.set('io', io);
+    
+    // Start server
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Backend API Server is running on:`);
       console.log(`   Local:   http://localhost:${PORT}`);
       console.log(`   Network: http://192.168.1.2:${PORT}`);
       console.log(`📱 Ready for network access and QR code scanning`);
       console.log(`🍃 Using MongoDB Atlas Database`);
+      console.log(`🔌 Socket.IO enabled for real-time synchronization`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

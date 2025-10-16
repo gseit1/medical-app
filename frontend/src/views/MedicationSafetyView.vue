@@ -874,9 +874,11 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 import api from '../services/api'
+import socketService from '../services/socket'
 import BarcodeScanner from '../components/BarcodeScanner.vue'
 
 export default {
@@ -886,6 +888,7 @@ export default {
   },
   setup() {
     const router = useRouter()
+    const authStore = useAuthStore()
     
     const currentStep = ref(1) // 1: Patient Selection, 2: Medication Scanning
     const selectedPatient = ref(null)
@@ -1089,6 +1092,10 @@ export default {
       currentStep.value = 2
       verificationResult.value = null
       scannedBarcode.value = ''
+      
+      // Broadcast patient selection to other devices
+      socketService.selectPatient(patient.id, patient.full_name)
+      console.log('🎯 Patient selected and broadcasted:', patient.full_name)
     }
 
     // Verify medication barcode for selected patient
@@ -1113,6 +1120,16 @@ export default {
         // Show modal based on verification result
         modalType.value = response.data.success ? 'success' : 'error'
         showVerificationModal.value = true
+        
+        // Broadcast medication scan to other devices
+        if (response.data.success && response.data.instruction) {
+          socketService.scanMedication(
+            selectedPatient.value.id, 
+            scannedBarcode.value.trim(),
+            response.data.instruction.description
+          )
+          console.log('💊 Medication scan broadcasted')
+        }
         
       } catch (err) {
         console.error('Error verifying medication:', err)
@@ -1356,6 +1373,13 @@ export default {
         // Update today's verification count
         todayVerifications.value += 1
         
+        // Broadcast medication completion to other devices
+        socketService.completeMedication(
+          selectedPatient.value.id, 
+          verificationResult.value.instruction.id
+        )
+        console.log('✅ Medication completion broadcasted')
+        
         // Show success message
         console.log('Medication completed successfully')
         
@@ -1393,6 +1417,62 @@ export default {
 
     onMounted(() => {
       fetchPatients()
+      
+      // Set up socket listeners for synchronization from other devices
+      socketService.on('patient-selected', async (data) => {
+        console.log('📱 Syncing patient selection from other device:', data)
+        
+        // Find the patient in our list
+        const patient = patients.value.find(p => p.id === data.patientId)
+        if (patient) {
+          // Sync the selection without broadcasting again
+          selectedPatient.value = patient
+          currentStep.value = 2
+          verificationResult.value = null
+          scannedBarcode.value = ''
+          
+          // Show notification
+          console.log('✅ Synced to patient:', data.patientName)
+        }
+      })
+      
+      socketService.on('medication-scanned', async (data) => {
+        console.log('📱 Syncing medication scan from other device:', data)
+        
+        // If we're on the same patient, sync the barcode
+        if (selectedPatient.value?.id === data.patientId) {
+          scannedBarcode.value = data.barcode
+          
+          // Optionally auto-verify
+          // await verifyMedication()
+          
+          console.log('✅ Synced medication barcode:', data.barcode)
+        }
+      })
+      
+      socketService.on('medication-completed', async (data) => {
+        console.log('📱 Syncing medication completion from other device:', data)
+        
+        // Refresh patient data to show updated status
+        if (selectedPatient.value?.id === data.patientId) {
+          await fetchPatients()
+          
+          // Update selected patient reference
+          const updatedPatient = patients.value.find(p => p.id === data.patientId)
+          if (updatedPatient) {
+            selectedPatient.value = updatedPatient
+          }
+          
+          console.log('✅ Synced medication completion')
+        }
+      })
+    })
+    
+    onUnmounted(() => {
+      // Clean up socket listeners
+      socketService.off('patient-selected')
+      socketService.off('medication-scanned')
+      socketService.off('medication-completed')
     })
 
     return {
