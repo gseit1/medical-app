@@ -173,20 +173,29 @@ const closeNavbar = () => {
 
 // Setup mobile navbar auto-close on mount
 onMounted(() => {
-  // Add click event listeners to all nav links
-  const navLinks = document.querySelectorAll('.navbar-nav .nav-link')
+  // Add click event listeners to navigation links only (not user menu)
+  const navLinks = document.querySelectorAll('.navbar-nav .nav-link:not(.user-menu):not(.dropdown-toggle)')
   navLinks.forEach(link => {
     link.addEventListener('click', closeNavbar)
   })
+
+  // Close navbar only after clicking logout button
+  const logoutBtn = document.querySelector('.logout-btn')
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', closeNavbar)
+  }
 
   // Also close when clicking outside the navbar on mobile
   document.addEventListener('click', (event) => {
     const navbar = document.querySelector('.navbar-collapse')
     const toggler = document.querySelector('.navbar-toggler')
+    const dropdown = document.querySelector('.user-dropdown')
     
     if (navbar && navbar.classList.contains('show')) {
-      // Check if click is outside navbar
-      if (!navbar.contains(event.target) && !toggler.contains(event.target)) {
+      // Check if click is outside navbar and not on dropdown
+      if (!navbar.contains(event.target) && 
+          !toggler.contains(event.target) && 
+          !dropdown?.contains(event.target)) {
         closeNavbar()
       }
     }
@@ -595,13 +604,23 @@ onMounted(() => {
   }
 
   /* User menu mobile styling */
-  .user-menu {
+  .user-dropdown {
     margin-top: 1rem;
+    width: 100%;
+  }
+
+  .user-menu {
     padding: 1rem !important;
     background: rgba(255, 255, 255, 0.1);
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     justify-content: center;
+    width: 100%;
+    display: flex !important;
+  }
+
+  .user-menu:hover {
+    background: rgba(255, 255, 255, 0.15);
   }
 
   .user-avatar {
@@ -620,10 +639,36 @@ onMounted(() => {
 
   /* Dropdown menu mobile adjustments */
   .dropdown-menu-pro {
+    position: relative !important;
+    transform: none !important;
     margin-top: 0.5rem !important;
     width: 100% !important;
     background: rgba(30, 64, 175, 0.95) !important;
     backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .dropdown-menu-pro.show {
+    display: block;
+  }
+
+  .dropdown-item {
+    color: white !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  .dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  .dropdown-header {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 0.85rem;
+  }
+
+  .dropdown-divider {
+    border-color: rgba(255, 255, 255, 0.2) !important;
   }
 }
 
