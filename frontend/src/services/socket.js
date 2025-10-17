@@ -19,11 +19,14 @@ class SocketService {
     this.userId = userId
 
     this.socket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling'], // Use polling only to avoid WebSocket CSP issues in production
+      upgrade: false, // Disable upgrade to websocket
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5
+      reconnectionAttempts: 5,
+      withCredentials: true,
+      path: '/socket.io/'
     })
 
     this.socket.on('connect', () => {

@@ -22,6 +22,25 @@ export default defineConfig({
         target: 'http://192.168.1.2:5000',
         changeOrigin: true,
         secure: false
+      },
+      '/socket.io': {
+        target: 'http://192.168.1.2:5000',
+        changeOrigin: true,
+        secure: false,
+        ws: true
+      }
+    },
+    // Allow WebSocket connections
+    hmr: {
+      protocol: 'ws',
+      host: 'localhost'
+    }
+  },
+  // Configure build to allow WebSocket in production
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
       }
     }
   }

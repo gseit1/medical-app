@@ -171,14 +171,18 @@ const initializeApp = async () => {
             return callback(null, true);
           }
           // Check allowed origins in production
-          if (allowedOrigins.indexOf(origin) !== -1) {
+          if (allowedOrigins.indexOf(origin) !== -1 || (origin && origin.includes('.netlify.app'))) {
             return callback(null, true);
           }
           return callback(new Error('Not allowed by CORS'));
         },
         methods: ['GET', 'POST'],
         credentials: true
-      }
+      },
+      transports: ['polling', 'websocket'],
+      allowEIO3: true,
+      pingTimeout: 60000,
+      pingInterval: 25000
     });
 
     // Store user sessions: userId -> array of socket IDs
