@@ -1419,7 +1419,7 @@ export default {
       fetchPatients()
       
       // Set up socket listeners for synchronization from other devices
-      socketService.on('patient-selected', async (data) => {
+      socketService.on('sync-patient-selected', async (data) => {
         console.log('📱 Syncing patient selection from other device:', data)
         
         // Find the patient in our list
@@ -1436,7 +1436,7 @@ export default {
         }
       })
       
-      socketService.on('medication-scanned', async (data) => {
+      socketService.on('sync-medication-scanned', async (data) => {
         console.log('📱 Syncing medication scan from other device:', data)
         
         // If we're on the same patient, sync the barcode
@@ -1450,7 +1450,7 @@ export default {
         }
       })
       
-      socketService.on('medication-completed', async (data) => {
+      socketService.on('sync-medication-completed', async (data) => {
         console.log('📱 Syncing medication completion from other device:', data)
         
         // Refresh patient data to show updated status

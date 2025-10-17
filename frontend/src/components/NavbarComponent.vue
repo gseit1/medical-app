@@ -153,11 +153,21 @@ const closeNavbar = () => {
   const navbarToggler = document.querySelector('.navbar-toggler')
   
   if (navbarCollapse && navbarCollapse.classList.contains('show')) {
-    // Use Bootstrap's collapse functionality to close
-    const bsCollapse = new window.bootstrap.Collapse(navbarCollapse, {
-      toggle: false
-    })
-    bsCollapse.hide()
+    // Check if Bootstrap is available
+    if (window.bootstrap && window.bootstrap.Collapse) {
+      try {
+        const bsCollapse = new window.bootstrap.Collapse(navbarCollapse, {
+          toggle: false
+        })
+        bsCollapse.hide()
+      } catch (e) {
+        console.warn('Bootstrap Collapse not available, using manual hide')
+        navbarCollapse.classList.remove('show')
+      }
+    } else {
+      // Fallback: manually remove the show class
+      navbarCollapse.classList.remove('show')
+    }
   }
 }
 
