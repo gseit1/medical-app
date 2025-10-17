@@ -1419,11 +1419,22 @@ export default {
       fetchPatients()
       
       // Set up socket listeners for synchronization from other devices
-      socketService.on('sync-patient-selected', async (data) => {
-        console.log('📱 Syncing patient selection from other device:', data)
+      // Note: Socket service converts 'sync-patient-selected' to 'patient-selected' locally
+      socketService.on('patient-selected', async (data) => {
+        console.log('📱 Received patient-selected event from socketService:', data)
+        console.log('📊 Current patients list:', patients.value.length, 'patients')
+        console.log('📊 Looking for patient with ID:', data.patientId)
+        
+        // Wait for patients to load if not loaded yet
+        if (patients.value.length === 0) {
+          console.log('⏳ Patients not loaded yet, waiting...')
+          await fetchPatients()
+        }
         
         // Find the patient in our list
         const patient = patients.value.find(p => p.id === data.patientId)
+        console.log('🔍 Found patient:', patient ? patient.full_name : 'NOT FOUND')
+        
         if (patient) {
           // Sync the selection without broadcasting again
           selectedPatient.value = patient
@@ -1431,12 +1442,24 @@ export default {
           verificationResult.value = null
           scannedBarcode.value = ''
           
+          // Scroll to step 2
+          setTimeout(() => {
+            const step2Element = document.querySelector('.step-2-section')
+            if (step2Element) {
+              step2Element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+          }, 100)
+          
           // Show notification
-          console.log('✅ Synced to patient:', data.patientName)
+          console.log('✅ Successfully synced to patient:', data.patientName)
+          console.log('✅ Current step:', currentStep.value)
+          console.log('✅ Selected patient:', selectedPatient.value?.full_name)
+        } else {
+          console.error('❌ Patient not found in list')
         }
       })
       
-      socketService.on('sync-medication-scanned', async (data) => {
+      socketService.on('medication-scanned', async (data) => {
         console.log('📱 Syncing medication scan from other device:', data)
         
         // If we're on the same patient, sync the barcode
@@ -1450,7 +1473,7 @@ export default {
         }
       })
       
-      socketService.on('sync-medication-completed', async (data) => {
+      socketService.on('medication-completed', async (data) => {
         console.log('📱 Syncing medication completion from other device:', data)
         
         // Refresh patient data to show updated status
