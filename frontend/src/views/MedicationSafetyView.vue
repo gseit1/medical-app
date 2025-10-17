@@ -1462,14 +1462,15 @@ export default {
       socketService.on('medication-scanned', async (data) => {
         console.log('📱 Syncing medication scan from other device:', data)
         
-        // If we're on the same patient, sync the barcode
+        // If we're on the same patient, sync the barcode and auto-verify
         if (selectedPatient.value?.id === data.patientId) {
           scannedBarcode.value = data.barcode
           
-          // Optionally auto-verify
-          // await verifyMedication()
+          // Auto-verify the medication and show modal
+          console.log('🔄 Auto-verifying synced medication...')
+          await verifyMedication()
           
-          console.log('✅ Synced medication barcode:', data.barcode)
+          console.log('✅ Synced and verified medication barcode:', data.barcode)
         }
       })
       
