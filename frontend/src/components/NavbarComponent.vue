@@ -633,8 +633,12 @@ onMounted(() => {
     padding: 0.5rem 0.75rem;
   }
 
-  .brand-text {
+  .brand-subtitle {
     display: none;
+  }
+
+  .brand-title {
+    font-size: 1rem;
   }
 
   .nav-link-pro span {
@@ -644,6 +648,19 @@ onMounted(() => {
   .custom-toggler {
     width: 45px;
     height: 45px;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 375px) {
+  .brand-text {
+    display: none;
+  }
+  
+  .brand-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 1.1rem;
   }
 }
 
