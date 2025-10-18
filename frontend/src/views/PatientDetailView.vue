@@ -27,7 +27,7 @@
           </button>
           <div class="patient-header">
             <div class="patient-avatar-large">
-              <i class="bi bi-person-circle"></i>
+              <span style="font-size: 4rem; line-height: 1;">{{ getGenderEmoji(patient.gender) }}</span>
             </div>
             <div class="patient-title-info">
               <h1 class="display-5 mb-2">{{ patient.full_name }}</h1>
@@ -42,148 +42,313 @@
       </div>
 
       <div class="row">
-        <!-- Left Column - Patient Info -->
+        <!-- Left Column - Patient Info & Medical History -->
         <div class="col-lg-4 mb-4">
           <!-- Basic Info Card -->
           <div class="card mb-3">
             <div class="card-header bg-primary text-white">
               <h5 class="mb-0 d-flex align-items-center">
-                <div class="card-avatar-small me-2">
-                  <i class="bi bi-person-circle"></i>
-                </div>
-                Στοιχεία Ασθενή
+                <i class="bi bi-person-vcard me-2"></i>
+                Προσωπικά Στοιχεία
               </h5>
             </div>
             <div class="card-body">
               <div class="mb-3">
-                <label class="text-muted small">Ονοματεπώνυμο</label>
+                <label class="text-muted small">🆔 Ονοματεπώνυμο</label>
                 <p class="fw-bold mb-0">{{ patient.full_name }}</p>
               </div>
               <div class="mb-3">
-                <label class="text-muted small">Α.Μ.Κ.Α</label>
+                <label class="text-muted small">📋 Α.Μ.Κ.Α</label>
                 <p class="mb-0"><code>{{ patient.amka }}</code></p>
               </div>
               <div class="mb-3">
-                <label class="text-muted small">Α.Φ.Μ</label>
-                <p class="mb-0"><code>{{ patient.afm }}</code></p>
+                <label class="text-muted small">💼 Α.Μ</label>
+                <p class="mb-0"><code>{{ patient.afm || 'N/A' }}</code></p>
               </div>
-              <div class="mb-0">
-                <label class="text-muted small">Ομάδα Αίματος</label>
+              <div class="mb-3">
+                <label class="text-muted small">📊 Ομάδα Αίματος</label>
                 <p class="mb-0">
                   <span class="badge bg-danger fs-6">{{ patient.blood_type || 'N/A' }}</span>
                 </p>
+              </div>
+              <hr />
+              <div class="mb-3">
+                <label class="text-muted small">👤 Ηλικία</label>
+                <p class="mb-0">{{ patient.age || 'N/A' }} ετών</p>
+              </div>
+              <div class="mb-3">
+                <label class="text-muted small">⚧ Φύλο</label>
+                <p class="mb-0">{{ translateGender(patient.gender) }}</p>
+              </div>
+              <div class="mb-3">
+                <label class="text-muted small">📞 Τηλέφωνο</label>
+                <p class="mb-0">
+                  <a v-if="patient.phone" :href="`tel:${patient.phone}`" class="text-decoration-none">
+                    {{ patient.phone }}
+                  </a>
+                  <span v-else class="text-muted">N/A</span>
+                </p>
+              </div>
+              <div class="mb-0">
+                <label class="text-muted small">🏥 Barcode</label>
+                <p class="mb-0"><code class="text-success">{{ patient.barcode || 'N/A' }}</code></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Medical History Card -->
+          <div v-if="patient.medical_history" class="card mb-3">
+            <div class="card-header bg-warning">
+              <h5 class="mb-0">
+                <i class="bi bi-file-medical me-2"></i> Ιστορικό Υγείας
+              </h5>
+            </div>
+            <div class="card-body">
+              <p class="mb-0">{{ patient.medical_history }}</p>
+            </div>
+          </div>
+
+          <!-- Registration Date Card -->
+          <div class="card">
+            <div class="card-header bg-secondary text-white">
+              <h5 class="mb-0">
+                <i class="bi bi-calendar me-2"></i> Στοιχεία Εγγραφής
+              </h5>
+            </div>
+            <div class="card-body">
+              <div class="mb-0">
+                <label class="text-muted small">📅 Ημερομηνία Εγγραφής</label>
+                <p class="mb-0">{{ formatDate(patient.created_at || patient.createdAt) }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Right Column - Medical Instructions & Referrals -->
+        <!-- Right Column - Medical Instructions, History & Referrals -->
         <div class="col-lg-8">
-          <!-- Medical Instructions -->
-          <div class="card mb-4">
-            <div class="card-header bg-info text-white">
-              <h5 class="mb-0">
-                <i class="bi bi-clipboard-pulse"></i> Ιατρικές Οδηγίες
-              </h5>
-            </div>
-            <div class="card-body">
-              <div v-if="!patient.medical_instructions || patient.medical_instructions.length === 0" class="text-center py-4">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                <p class="text-muted mt-2">Δεν υπάρχουν ιατρικές οδηγίες</p>
-              </div>
-              
-              <div v-else>
-                <div
-                  v-for="instruction in patient.medical_instructions"
-                  :key="instruction.id"
-                  class="instruction-item p-3 mb-3 border rounded"
-                  :class="{ 
-                    'completed': instruction.status === 'Completed',
-                    'border-success': instruction.verified
-                  }"
-                >
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                      <div class="d-flex align-items-start mb-2">
-                        <i v-if="instruction.verified" class="bi bi-check-circle-fill text-success me-2 fs-5"></i>
-                        <h6 class="mb-0">{{ instruction.description }}</h6>
+          <!-- Tab Navigation -->
+          <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button 
+                class="nav-link active" 
+                id="instructions-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#instructions-pane" 
+                type="button" 
+                role="tab"
+              >
+                <i class="bi bi-clipboard-pulse me-2"></i>
+                Τρέχουσες Οδηγίες
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button 
+                class="nav-link" 
+                id="history-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#history-pane" 
+                type="button" 
+                role="tab"
+              >
+                <i class="bi bi-clock-history me-2"></i>
+                Ιστορικό Φαρμάκων
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button 
+                class="nav-link" 
+                id="referrals-tab" 
+                data-bs-toggle="tab" 
+                data-bs-target="#referrals-pane" 
+                type="button" 
+                role="tab"
+              >
+                <i class="bi bi-file-medical me-2"></i>
+                Παραπεμπτικά
+              </button>
+            </li>
+          </ul>
+
+          <!-- Tab Content -->
+          <div class="tab-content">
+            <!-- Instructions Tab -->
+            <div class="tab-pane fade show active" id="instructions-pane" role="tabpanel">
+              <div class="card">
+                <div class="card-header bg-info text-white">
+                  <h5 class="mb-0">
+                    <i class="bi bi-clipboard-pulse"></i> Τρέχουσες Ιατρικές Οδηγίες
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div v-if="!patient.medical_instructions || patient.medical_instructions.length === 0" class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-2">Δεν υπάρχουν τρέχουσες ιατρικές οδηγίες</p>
+                  </div>
+                  
+                  <div v-else>
+                    <div
+                      v-for="instruction in patient.medical_instructions"
+                      :key="instruction.id"
+                      class="instruction-item p-3 mb-3 border rounded"
+                      :class="{ 
+                        'completed': instruction.status === 'Completed',
+                        'border-success': instruction.verified
+                      }"
+                    >
+                      <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                          <div class="d-flex align-items-start mb-2">
+                            <i v-if="instruction.verified" class="bi bi-check-circle-fill text-success me-2 fs-5"></i>
+                            <h6 class="mb-0">{{ instruction.description }}</h6>
+                          </div>
+                          <p class="mb-2 text-muted small">
+                            <i class="bi bi-upc-scan"></i>
+                            Barcode: <code>{{ instruction.barcode }}</code>
+                          </p>
+                          <p class="mb-0 text-muted small">
+                            <i class="bi bi-calendar"></i>
+                            {{ formatDate(instruction.created_at) }}
+                          </p>
+                          <div v-if="instruction.verified" class="alert alert-success alert-sm mt-2 mb-0 py-1 px-2">
+                            <small><i class="bi bi-check-circle"></i> Επαληθευμένο στις {{ instruction.verifiedTime }}</small>
+                          </div>
+                        </div>
+                        <div class="ms-3 d-flex flex-column gap-2">
+                          <span
+                            class="badge status-badge"
+                            :class="instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'"
+                          >
+                            {{ instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή' }}
+                          </span>
+                          
+                          <!-- Verify Button - Show for pending instructions -->
+                          <button
+                            v-if="authStore.isNurse && instruction.status !== 'Completed'"
+                            class="btn btn-sm btn-primary"
+                            @click="openVerificationModal(instruction)"
+                            :disabled="instruction.verified"
+                          >
+                            <i class="bi bi-qr-code-scan"></i> 
+                            {{ instruction.verified ? 'Επαληθευμένο' : 'Επαλήθευση' }}
+                          </button>
+                          
+                          <!-- Complete Button - Show only after verification -->
+                          <button
+                            v-if="authStore.isNurse && instruction.verified && instruction.status !== 'Completed'"
+                            class="btn btn-sm btn-success"
+                            @click="completeInstruction(instruction.id)"
+                          >
+                            <i class="bi bi-check-circle"></i> Ολοκλήρωση
+                          </button>
+                        </div>
                       </div>
-                      <p class="mb-2 text-muted small">
-                        <i class="bi bi-upc-scan"></i>
-                        Barcode: <code>{{ instruction.barcode }}</code>
-                      </p>
-                      <p class="mb-0 text-muted small">
-                        <i class="bi bi-calendar"></i>
-                        {{ formatDate(instruction.created_at) }}
-                      </p>
-                      <div v-if="instruction.verified" class="alert alert-success alert-sm mt-2 mb-0 py-1 px-2">
-                        <small><i class="bi bi-check-circle"></i> Επαληθευμένο στις {{ instruction.verifiedTime }}</small>
-                      </div>
-                    </div>
-                    <div class="ms-3 d-flex flex-column gap-2">
-                      <span
-                        class="badge status-badge"
-                        :class="instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'"
-                      >
-                        {{ instruction.status === 'Completed' ? 'Ολοκληρωμένη' : 'Αναμονή' }}
-                      </span>
-                      
-                      <!-- Verify Button - Show for pending instructions -->
-                      <button
-                        v-if="authStore.isNurse && instruction.status !== 'Completed'"
-                        class="btn btn-sm btn-primary"
-                        @click="openVerificationModal(instruction)"
-                        :disabled="instruction.verified"
-                      >
-                        <i class="bi bi-qr-code-scan"></i> 
-                        {{ instruction.verified ? 'Επαληθευμένο' : 'Επαλήθευση' }}
-                      </button>
-                      
-                      <!-- Complete Button - Show only after verification -->
-                      <button
-                        v-if="authStore.isNurse && instruction.verified && instruction.status !== 'Completed'"
-                        class="btn btn-sm btn-success"
-                        @click="completeInstruction(instruction.id)"
-                      >
-                        <i class="bi bi-check-circle"></i> Ολοκλήρωση
-                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Referrals -->
-          <div class="card">
-            <div class="card-header bg-warning">
-              <h5 class="mb-0">
-                <i class="bi bi-file-medical"></i> Παραπεμπτικά
-              </h5>
-            </div>
-            <div class="card-body">
-              <div v-if="patient.referrals?.length === 0" class="text-center py-4">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                <p class="text-muted mt-2">Δεν υπάρχουν παραπεμπτικά</p>
+            <!-- History Tab -->
+            <div class="tab-pane fade" id="history-pane" role="tabpanel">
+              <div class="card">
+                <div class="card-header bg-success text-white">
+                  <h5 class="mb-0">
+                    <i class="bi bi-clock-history"></i> Ιστορικό Φαρμάκων
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div v-if="!medicationHistory || medicationHistory.length === 0" class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-2">Δεν υπάρχει ιστορικό ολοκληρωμένων φαρμάκων</p>
+                  </div>
+                  
+                  <div v-else class="medication-timeline">
+                    <div
+                      v-for="(item, index) in medicationHistory"
+                      :key="item.id"
+                      class="history-item"
+                      :class="{ 'last-item': index === medicationHistory.length - 1 }"
+                    >
+                      <div class="history-marker">
+                        <i class="bi bi-check-circle-fill"></i>
+                      </div>
+                      <div class="history-content">
+                        <h6 class="mb-1">{{ item.description }}</h6>
+                        <p class="text-muted small mb-2">
+                          <i class="bi bi-upc-scan"></i> Barcode: <code>{{ item.barcode }}</code>
+                        </p>
+                        <div class="d-flex justify-content-between flex-wrap gap-2">
+                          <small class="text-muted">
+                            <i class="bi bi-calendar-check"></i>
+                            Χορηγήθηκε: {{ formatDate(item.completed_at) }}
+                          </small>
+                          <small class="text-muted">
+                            <i class="bi bi-alarm"></i>
+                            {{ formatTime(item.completed_at) }}
+                          </small>
+                          <small v-if="item.completed_by_name" class="text-info fw-bold">
+                            {{ getNurseEmoji() }}
+                            Νοσηλευτής: {{ item.completed_by_name }}
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Statistics -->
+                  <div v-if="medicationHistory && medicationHistory.length > 0" class="mt-4 pt-3 border-top">
+                    <div class="row">
+                      <div class="col-6">
+                        <div class="text-center">
+                          <h4 class="text-success mb-0">{{ medicationHistory.length }}</h4>
+                          <small class="text-muted">Φάρμακα χορηγηθέντα</small>
+                        </div>
+                      </div>
+                      <div class="col-6">
+                        <div class="text-center">
+                          <h4 class="text-info mb-0">{{ getCompletionRate }}%</h4>
+                          <small class="text-muted">Ποσοστό ολοκλήρωσης</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div v-else class="table-responsive">
-                <table class="table table-sm">
-                  <thead>
-                    <tr>
-                      <th>Περιγραφή</th>
-                      <th>Ημερομηνία</th>
-                      <th>Ιατρός</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="referral in patient.referrals" :key="referral.id">
-                      <td>{{ referral.description }}</td>
-                      <td>{{ formatDate(referral.referral_date) }}</td>
-                      <td>{{ referral.doctor_name || 'N/A' }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+            </div>
+
+            <!-- Referrals Tab -->
+            <div class="tab-pane fade" id="referrals-pane" role="tabpanel">
+              <div class="card">
+                <div class="card-header bg-warning">
+                  <h5 class="mb-0">
+                    <i class="bi bi-file-medical"></i> Παραπεμπτικά
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <div v-if="patient.referrals?.length === 0" class="text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                    <p class="text-muted mt-2">Δεν υπάρχουν παραπεμπτικά</p>
+                  </div>
+                  
+                  <div v-else class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>Περιγραφή</th>
+                          <th>Ημερομηνία</th>
+                          <th>Ιατρός</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="referral in patient.referrals" :key="referral.id">
+                          <td>{{ referral.description }}</td>
+                          <td>{{ formatDate(referral.referral_date) }}</td>
+                          <td>{{ referral.doctor_name || 'N/A' }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -326,7 +491,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import api from '../services/api'
@@ -338,6 +503,7 @@ const authStore = useAuthStore()
 const patient = ref(null)
 const loading = ref(true)
 const error = ref(null)
+const medicationHistory = ref([])
 
 // Verification Modal
 const verificationModal = ref({
@@ -354,6 +520,17 @@ const fetchPatientDetails = async () => {
     loading.value = true
     error.value = null
     const patientId = route.params.id
+    console.log('🔍 Patient ID from route:', patientId)
+    console.log('🔍 Full route params:', route.params)
+    
+    // Validate patientId exists
+    if (!patientId) {
+      error.value = 'Δεν βρέθηκε αναγνωριστικό ασθενή'
+      console.error('❌ No patient ID provided in route')
+      loading.value = false
+      return
+    }
+    
     const response = await api.get(`/patients/${patientId}`)
     
     console.log('🔍 Full API Response:', response.data)
@@ -374,6 +551,9 @@ const fetchPatientDetails = async () => {
     console.log('📷 Profile image:', patient.value.profile_image)
     console.log('💊 Medical instructions:', patient.value.medical_instructions?.length || 0)
     
+    // Load medication history
+    await loadMedicationHistory(patientId)
+    
   } catch (err) {
     error.value = err.response?.data?.message || 'Σφάλμα φόρτωσης στοιχείων ασθενή'
     console.error('Error fetching patient details:', err)
@@ -381,6 +561,58 @@ const fetchPatientDetails = async () => {
     loading.value = false
   }
 }
+
+const loadMedicationHistory = async (patientId) => {
+  try {
+    // Get all instructions (both pending and completed)
+    const response = await api.get(`/instructions/patient/${patientId}`)
+    
+    if (response.data && Array.isArray(response.data)) {
+      // Filter completed instructions and sort by completion date (newest first)
+      medicationHistory.value = response.data
+        .filter(inst => inst.status === 'Completed')
+        .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at))
+      
+      console.log('📊 Loaded medication history:', medicationHistory.value.length, 'completed medications')
+    }
+  } catch (err) {
+    console.error('Error loading medication history:', err)
+  }
+}
+
+const translateGender = (gender) => {
+  const genderMap = {
+    'M': 'Άρρεν',
+    'F': 'Θήλυ',
+    'O': 'Άλλο',
+    'Male': 'Άρρεν',
+    'Female': 'Θήλυ',
+    'Other': 'Άλλο'
+  }
+  return genderMap[gender] || gender || 'N/A'
+}
+
+const getGenderEmoji = (gender) => {
+  if (!gender) return '👤'
+  const genderLower = gender.toLowerCase()
+  if (genderLower === 'male' || genderLower === 'άρρεν' || genderLower === 'm') {
+    return '👨'
+  } else if (genderLower === 'female' || genderLower === 'θήλυ' || genderLower === 'f') {
+    return '👩'
+  }
+  return '👤'
+}
+
+const getNurseEmoji = () => {
+  return '👩‍⚕️'
+}
+
+const getCompletionRate = computed(() => {
+  if (!patient.value?.medical_instructions || !medicationHistory.value) return 0
+  const total = (patient.value.medical_instructions?.length || 0) + (medicationHistory.value?.length || 0)
+  if (total === 0) return 0
+  return Math.round((medicationHistory.value.length / total) * 100)
+})
 
 const handleImageError = (event) => {
   // Replace broken image with default icon
@@ -554,6 +786,15 @@ const formatDate = (dateString) => {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
+  })
+}
+
+const formatTime = (dateString) => {
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleTimeString('el-GR', {
+    hour: '2-digit',
+    minute: '2-digit'
   })
 }
 
@@ -788,6 +1029,106 @@ label {
   }
 }
 
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .patient-header {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+  
+  .patient-avatar-large {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .patient-info h2 {
+    font-size: 1.5rem;
+  }
+  
+  .patient-badges {
+    justify-content: center;
+  }
+}
+
+/* Timeline History Styles */
+.medication-timeline {
+  position: relative;
+  padding: 0;
+}
+
+.medication-timeline::before {
+  content: '';
+  position: absolute;
+  left: 24px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #22c55e 0%, #10b981 100%);
+}
+
+.history-item {
+  position: relative;
+  margin-bottom: 2rem;
+  padding-left: 70px;
+  min-height: 80px;
+}
+
+.history-item.last-item::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  bottom: -2rem;
+  width: 2px;
+  height: 2rem;
+  background: transparent;
+}
+
+.history-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 50px;
+  height: 50px;
+  background: white;
+  border: 3px solid #22c55e;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #22c55e;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.2);
+}
+
+.history-content {
+  background: #f8f9fa;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+}
+
+.history-content:hover {
+  border-color: #22c55e;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+  background: #f0fdf4;
+}
+
+.history-content h6 {
+  color: #1e293b;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.history-content code {
+  background: white;
+  border: 1px solid #e2e8f0;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 576px) {
   .modal-dialog-custom {
     margin: 0.5rem;
@@ -812,6 +1153,19 @@ label {
     width: 40px;
     height: 40px;
   }
-}
 
+  .medication-timeline::before {
+    left: 17px;
+  }
+
+  .history-marker {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+
+  .history-item {
+    padding-left: 60px;
+  }
+}
 </style>

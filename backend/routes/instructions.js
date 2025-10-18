@@ -4,6 +4,7 @@ const {
   verifyBarcode,
   verifyBarcodeById,
   completeInstruction,
+  getAllInstructions,
   getInstructionsByPatient,
   createInstruction,
   verifySafety,
@@ -11,6 +12,12 @@ const {
   resetAllMedicationsStatus
 } = require('../controllers/instructionController_mongo');
 const { authenticateToken, requireNurse } = require('../middleware/auth');
+
+// GET /api/instructions - Get all instructions (dashboard)
+router.get('/', authenticateToken, getAllInstructions);
+
+// GET /api/instructions/patient/:patientId - Get all instructions for a patient (MUST BE AFTER /)
+router.get('/patient/:patientId', authenticateToken, getInstructionsByPatient);
 
 // POST /api/instructions/verify-barcode - Verify barcode for patient
 router.post('/verify-barcode', authenticateToken, verifyBarcode);
@@ -26,9 +33,6 @@ router.post('/check-completed', authenticateToken, checkMedicationCompleted);
 
 // PATCH /api/instructions/:id/complete - Mark instruction as completed
 router.patch('/:id/complete', authenticateToken, completeInstruction);
-
-// GET /api/instructions/patient/:patientId - Get all instructions for a patient
-router.get('/patient/:patientId', authenticateToken, getInstructionsByPatient);
 
 // POST /api/instructions - Create new instruction (nurse only)
 router.post('/', authenticateToken, requireNurse, createInstruction);

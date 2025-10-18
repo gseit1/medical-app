@@ -57,6 +57,22 @@ const medicalInstructionSchema = new mongoose.Schema({
     ref: 'Patient',
     required: true
   },
+  medication_name: {
+    type: String,
+    default: null
+  },
+  dosage: {
+    type: String,
+    default: null
+  },
+  frequency: {
+    type: String,
+    default: null
+  },
+  duration: {
+    type: String,
+    default: null
+  },
   description: {
     type: String,
     required: true
@@ -66,6 +82,43 @@ const medicalInstructionSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  icd10_code: {
+    type: String,
+    default: null
+  },
+  icd10_description: {
+    type: String,
+    default: null
+  },
+  instructions: {
+    type: String,
+    default: null
+  },
+  drug_interactions: [{
+    _id: mongoose.Schema.Types.ObjectId,
+    interaction_with: String,
+    severity: {
+      type: String,
+      enum: ['Low', 'Moderate', 'High', 'Critical'],
+      default: 'Moderate'
+    },
+    description: String,
+    recommendation: String
+  }],
+  safety_alerts: [{
+    _id: mongoose.Schema.Types.ObjectId,
+    alert_type: {
+      type: String,
+      enum: ['Contraindication', 'Warning', 'Caution', 'Info'],
+      default: 'Info'
+    },
+    severity: {
+      type: String,
+      enum: ['Low', 'Moderate', 'High', 'Critical'],
+      default: 'Moderate'
+    },
+    message: String
+  }],
   status: {
     type: String,
     enum: ['Pending', 'Completed'],
@@ -74,6 +127,19 @@ const medicalInstructionSchema = new mongoose.Schema({
   completed_at: {
     type: Date,
     default: null
+  },
+  completed_by: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  completed_by_name: {
+    type: String,
+    default: null
+  },
+  verified: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

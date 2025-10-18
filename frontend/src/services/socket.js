@@ -10,9 +10,17 @@ class SocketService {
   }
 
   connect(userId) {
-    if (this.socket?.connected) {
-      console.log('Socket already connected')
+    // If already connected to the same user, do nothing
+    if (this.socket?.connected && this.userId === userId) {
+      console.log('✅ Socket already connected for user:', userId)
       return
+    }
+
+    // Disconnect any existing socket before creating a new one
+    if (this.socket) {
+      console.log('🔌 Disconnecting old socket before reconnecting...')
+      this.socket.disconnect()
+      this.socket = null
     }
 
     console.log('🔌 Connecting to Socket.IO server:', SOCKET_URL)
@@ -26,7 +34,8 @@ class SocketService {
       reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
       withCredentials: true,
-      path: '/socket.io/'
+      path: '/socket.io/',
+      forceNew: true // Force new connection instance
     })
 
     this.socket.on('connect', () => {
@@ -96,7 +105,7 @@ class SocketService {
   }
 
   // Emit medication scan event
-  scanMedication(patientId, barcode, medicationDescription) {
+  scanMedication(patientId, barcode, medicationDescription, verificationResult = null) {
     if (!this.socket?.connected) {
       console.warn('Socket not connected')
       return
@@ -107,7 +116,8 @@ class SocketService {
       userId: this.userId,
       patientId,
       barcode,
-      medicationDescription
+      medicationDescription,
+      verificationResult // Include full verification result for sync
     })
   }
 

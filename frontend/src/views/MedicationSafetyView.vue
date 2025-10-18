@@ -225,7 +225,7 @@
             <!-- Patient Info Summary -->
             <div class="patient-summary-card-compact">
               <div class="summary-patient-avatar">
-                <i class="bi bi-person-fill"></i>
+                <span style="font-size: 2.5rem;">{{ getGenderEmoji(selectedPatient.gender) }}</span>
               </div>
               <div class="summary-patient-info">
                 <h4>{{ selectedPatient.full_name }}</h4>
@@ -666,6 +666,10 @@
                 <span class="label">Χορηγήθηκε στις:</span>
                 <span class="value">{{ formatDateTime(verificationResult.instruction.completed_at) }}</span>
               </div>
+              <div class="detail-item" v-if="verificationResult.instruction?.completed_by_name">
+                <span class="label">Χορήγηση από:</span>
+                <span class="value nurse-info">{{ getNurseEmoji() }} {{ verificationResult.instruction.completed_by_name }}</span>
+              </div>
             </div>
             <div class="completion-warning">
               <i class="bi bi-exclamation-triangle-fill"></i>
@@ -793,6 +797,23 @@ export default {
     
     const setFilter = (filter) => {
       activeFilter.value = filter
+    }
+
+    // Helper function to get gender emoji
+    const getGenderEmoji = (gender) => {
+      if (!gender) return '👤'
+      const genderLower = gender.toLowerCase()
+      if (genderLower === 'male' || genderLower === 'άρρεν' || genderLower === 'm') {
+        return '👨'
+      } else if (genderLower === 'female' || genderLower === 'θήλυ' || genderLower === 'f') {
+        return '👩'
+      }
+      return '👤'
+    }
+
+    // Helper function to get nurse emoji
+    const getNurseEmoji = () => {
+      return '👩‍⚕️'
     }
 
     // Fetch all patients for selection
@@ -938,7 +959,7 @@ export default {
     }
 
     // Verify medication barcode for selected patient
-    const verifyMedication = async () => {
+    const verifyMedication = async (isFromSync = false) => {
       if (!scannedBarcode.value.trim()) {
         error.value = 'Παρακαλώ εισάγετε barcode'
         return
@@ -960,12 +981,13 @@ export default {
         modalType.value = response.data.success ? 'success' : 'error'
         showVerificationModal.value = true
         
-        // Broadcast medication scan to other devices
-        if (response.data.success && response.data.instruction) {
+        // Broadcast medication scan to other devices (only if not from sync to prevent loops)
+        if (!isFromSync) {
           socketService.scanMedication(
             selectedPatient.value.id, 
             scannedBarcode.value.trim(),
-            response.data.instruction.description
+            response.data.instruction?.description || '',
+            response.data // Also broadcast the full verification result
           )
           console.log('💊 Medication scan broadcasted')
         }
@@ -1222,9 +1244,12 @@ export default {
         // Show success message
         console.log('Medication completed successfully')
         
-        // Auto-close modal after a short delay
+        // Auto-close modal and clear state after a short delay
         setTimeout(() => {
           closeModal()
+          // Clear barcode and results to prevent re-broadcasting
+          scannedBarcode.value = ''
+          verificationResult.value = null
         }, 1500)
 
       } catch (error) {
@@ -1301,13 +1326,21 @@ export default {
       socketService.on('medication-scanned', async (data) => {
         console.log('📱 Syncing medication scan from other device:', data)
         
-        // If we're on the same patient, sync the barcode and auto-verify
-        if (selectedPatient.value?.id === data.patientId) {
+        // If we're on the same patient, sync the barcode and show verification result
+        if (selectedPatient.value?.id === data.patientId && data.barcode) {
           scannedBarcode.value = data.barcode
           
-          // Auto-verify the medication and show modal
-          console.log('🔄 Auto-verifying synced medication...')
-          await verifyMedication()
+          // Use the verification result from the other device if available
+          if (data.verificationResult) {
+            verificationResult.value = data.verificationResult
+            modalType.value = data.verificationResult.success ? 'success' : 'error'
+            showVerificationModal.value = true
+            console.log('✅ Synced verification result from other device')
+          } else {
+            // If no verification result, verify locally
+            console.log('🔄 Auto-verifying synced medication...')
+            await verifyMedication(true) // Pass true to indicate this is from sync
+          }
           
           console.log('✅ Synced and verified medication barcode:', data.barcode)
         }
@@ -1383,7 +1416,9 @@ export default {
       getMedicationSummary,
       patientBarcodeScanned,
       handlePatientBarcodeDetected,
-      clearPatientBarcode
+      clearPatientBarcode,
+      getGenderEmoji,
+      getNurseEmoji
     }
   }
 }
@@ -1392,8 +1427,8 @@ export default {
 <style scoped>
 /* Main Container */
 .medication-safety-container {
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
   display: flex;
@@ -1607,8 +1642,11 @@ export default {
   align-items: center;
   justify-content: space-between;
   position: relative;
-  max-width: 600px;
+  width: 100%;
+  max-width: 100%;
   margin: 0 auto;
+  padding: 0;
+  flex-wrap: wrap;
 }
 
 .step-progress-bar {
@@ -1634,8 +1672,10 @@ export default {
   text-align: center;
   position: relative;
   z-index: 2;
+  flex: 0 1 calc(50% - 0.75rem);
   flex: 1;
   max-width: 250px;
+  min-width: 0;
 }
 
 .step-circle {
@@ -1738,7 +1778,8 @@ export default {
 /* Main Content Section */
 .main-content {
   flex: 1;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.5rem 0;
   display: flex;
   align-items: center;
@@ -1757,7 +1798,8 @@ export default {
   gap: 1.5rem;
   flex: 1;
   padding: 1.5rem;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 50%, #f8faff 100%);
 }
 
@@ -5562,6 +5604,15 @@ export default {
   font-weight: 500;
 }
 
+.nurse-info {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  color: #047857 !important;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #d1fae5;
+  font-weight: 600;
+}
+
 .barcode-text {
   font-family: 'Courier New', monospace;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -6177,5 +6228,555 @@ export default {
   content: 'Φόρτωση στατιστικών...';
   color: #9ca3af;
   font-style: italic;
+}
+/* ============================================
+   COMPREHENSIVE MOBILE RESPONSIVE UPDATES
+   ============================================ */
+
+/* Account for sidebar on mobile (60px top bar) */
+@media (max-width: 991.98px) {
+  .medication-safety-container {
+    min-height: auto;
+    overflow-y: auto;
+  }
+  
+  .steps-section {
+    padding: 1rem 0;
+    flex-shrink: 0;
+  }
+}
+
+/* Tablet Responsive (768px - 991px) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .medication-safety-container {
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+  
+  .steps-section {
+    padding: 1rem;
+    flex-shrink: 0;
+    min-height: auto;
+  }
+  
+  .advanced-stepper {
+    max-width: 100%;
+    padding: 0;
+    width: 100%;
+  }
+  
+  .advanced-step {
+    max-width: none;
+    padding: 0.75rem;
+  }
+  
+  .main-content {
+    padding: 1.5rem;
+    min-height: auto;
+  }
+  
+  .scanner-wrapper {
+    padding: 1rem;
+  }
+  
+  .step2-two-column {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .step2-left-column {
+    max-height: 45vh;
+  }
+  
+  .step2-right-column {
+    min-height: 45vh;
+  }
+}
+
+/* Mobile Responsive (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767.98px) {
+  .medication-safety-container {
+    height: auto;
+    overflow-y: auto;
+    min-height: 100vh;
+  }
+  
+  .steps-section {
+    padding: 0.75rem;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.03);
+    flex-shrink: 0;
+  }
+  
+  .advanced-stepper {
+    flex-direction: row;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+  
+  .step-progress-bar {
+    display: none;
+  }
+  
+  .advanced-step {
+    flex: 1;
+    max-width: none;
+    padding: 0.6rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .advanced-step.active {
+    background: #eff6ff;
+    border-color: #2563eb;
+  }
+  
+  .step-circle {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .step-inner {
+    width: 30px;
+    height: 30px;
+    font-size: 0.9rem;
+  }
+  
+  .step-title {
+    font-size: 0.88rem;
+  }
+  
+  .step-description {
+    font-size: 0.72rem;
+  }
+  
+  .step-info {
+    font-size: 0.68rem;
+    padding: 0.15rem 0.45rem;
+  }
+  
+  .main-content {
+    padding: 1.25rem;
+    height: auto;
+    min-height: auto;
+  }
+  
+  .scanner-wrapper {
+    padding: 0.75rem;
+  }
+  
+  .scanner-pro-header {
+    padding: 1rem;
+  }
+  
+  .scanner-main {
+    height: auto;
+    min-height: 50vh;
+  }
+  
+  .scanner-frame-pro {
+    border-radius: 12px;
+    min-height: 40vh;
+  }
+  
+  .step2-two-column {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+  
+  .step2-left-column {
+    max-height: 40vh;
+    border-radius: 12px;
+  }
+  
+  .step2-right-column {
+    min-height: 40vh;
+  }
+  
+  .instructions-list {
+    max-height: 35vh;
+  }
+  
+  .instruction-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .scanner-card {
+    border-radius: 12px;
+    padding: 1rem;
+  }
+}
+
+/* Mobile Responsive (Small: 320px - 480px) - OPTIMIZED FOR NO OVERLAP */
+@media (max-width: 480px) {
+  .medication-safety-container {
+    height: auto;
+    overflow-y: auto;
+    min-height: auto;
+  }
+  
+  /* STEPS SECTION - Fix overlapping issue */
+  .steps-section {
+    padding: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    flex-shrink: 0;
+    width: 100%;
+    min-height: auto;
+  }
+  
+  .advanced-stepper {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+  
+  .step-progress-bar {
+    display: none !important;
+  }
+  
+  .advanced-step {
+    flex: 0 0 auto;
+    width: calc(100% - 0.5rem);
+    max-width: none;
+    padding: 0.5rem;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    margin: 0;
+  }
+  
+  .advanced-step.active {
+    background: #eff6ff;
+    border-color: #2563eb;
+  }
+  
+  .step-circle {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 0.25rem;
+  }
+  
+  .step-inner {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  }
+  
+  .step-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin: 0.25rem 0 0 0;
+    line-height: 1.2;
+  }
+  
+  .step-description {
+    font-size: 0.6rem;
+    display: none;
+  }
+  
+  .step-info {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.25rem;
+    margin-top: 0.1rem;
+  }
+  
+  /* MAIN CONTENT - Fix scrolling and sizing */
+  .main-content {
+    padding: 0.5rem;
+    height: auto;
+    min-height: auto;
+    align-items: stretch;
+    justify-content: flex-start;
+  }
+  
+  .scanner-wrapper {
+    padding: 0.5rem;
+    width: 100%;
+  }
+  
+  .scanner-pro-header {
+    padding: 0.65rem;
+  }
+  
+  .header-step {
+    gap: 0.5rem;
+  }
+  
+  .step-number {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .step-label {
+    font-size: 0.75rem;
+  }
+  
+  .scanner-title {
+    font-size: 1.2rem;
+    margin: 0.3rem 0;
+  }
+  
+  .scanner-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .scanner-main {
+    height: auto;
+    min-height: 55vh;
+    max-height: none;
+    padding: 0.75rem;
+  }
+  
+  .scanner-frame-pro {
+    border-radius: 10px;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+  }
+  
+  .corner-marker {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .corner-line {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .focus-circle {
+    width: 75px;
+    height: 75px;
+  }
+  
+  /* Step 2 Two Column */
+  .step2-two-column {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    height: auto;
+    min-height: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+  }
+  
+  .step2-left-column {
+    max-height: 35vh;
+    border-radius: 8px;
+    min-height: auto;
+  }
+  
+  .step2-right-column {
+    min-height: 40vh;
+  }
+  
+  .instructions-list {
+    max-height: 32vh;
+    padding: 0.4rem;
+  }
+  
+  .instruction-card {
+    padding: 0.6rem;
+    margin-bottom: 0.35rem;
+    border-radius: 8px;
+  }
+  
+  .instruction-title {
+    font-size: 0.88rem;
+  }
+  
+  .instruction-barcode {
+    font-size: 0.7rem;
+  }
+  
+  .instruction-status {
+    font-size: 0.68rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .scanner-card {
+    border-radius: 8px;
+    padding: 0.65rem;
+    height: auto;
+    min-height: 36vh;
+  }
+  
+  .scanner-header {
+    padding: 0.65rem 0.65rem 0.4rem;
+  }
+  
+  .scanner-header-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    margin-bottom: 0.35rem;
+  }
+  
+  .scanner-header h2 {
+    font-size: 1.05rem;
+  }
+  
+  .scanner-header p {
+    font-size: 0.78rem;
+  }
+  
+  .scanner-body {
+    padding: 0.65rem;
+  }
+  
+  .scanner-frame {
+    border-radius: 8px;
+    min-height: 24vh;
+  }
+  
+  .corner {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .scanner-tips {
+    gap: 0.65rem;
+    padding: 0.5rem;
+  }
+  
+  .tip {
+    min-width: 65px;
+    font-size: 0.7rem;
+  }
+  
+  .tip i {
+    font-size: 1.1rem;
+  }
+  
+  .tip span {
+    font-size: 0.65rem;
+  }
+  
+  .success-icon {
+    width: 75px;
+    height: 75px;
+  }
+  
+  .success-icon i {
+    font-size: 2.3rem;
+  }
+  
+  .scanner-success h3 {
+    font-size: 1.15rem;
+    margin: 0.35rem 0;
+  }
+  
+  .barcode-display {
+    font-size: 0.88rem;
+    padding: 0.55rem 0.95rem;
+    word-break: break-all;
+  }
+  
+  .loading-indicator {
+    font-size: 0.8rem;
+  }
+  
+  .btn-rescan {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.8rem;
+  }
+  
+  .btn-next {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.8rem;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem !important;
+  }
+  
+  .modal-content {
+    border-radius: 10px;
+  }
+  
+  .modal-header {
+    padding: 0.9rem;
+  }
+  
+  .modal-body {
+    padding: 0.9rem;
+  }
+  
+  .medication-hero {
+    min-height: auto;
+    padding: 1.5rem 0;
+  }
+  
+  .hero-title {
+    font-size: 1.9rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .hero-stats {
+    gap: 0.75rem;
+  }
+  
+  .hero-stats .stat-item {
+    padding: 0.65rem;
+    min-width: 85px;
+  }
+  
+  .hero-stats .stat-number {
+    font-size: 1.9rem;
+  }
+  
+  .hero-stats .stat-label {
+    font-size: 0.7rem;
+  }
+}
+
+/* Extra Small Mobile (< 320px) */
+@media (max-width: 319px) {
+  .medication-safety-container {
+    min-height: auto;
+  }
+  
+  .steps-section {
+    padding: 0.5rem;
+  }
+  
+  .advanced-stepper {
+    gap: 0.5rem;
+    padding: 0;
+  }
+  
+  .step-circle {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .step-title {
+    font-size: 0.8rem;
+  }
+  
+  .scanner-title {
+    font-size: 1.05rem;
+  }
+  
+  .scanner-subtitle {
+    font-size: 0.7rem;
+  }
 }
 </style>

@@ -98,7 +98,7 @@
                     v-model="searchQuery"
                     type="text"
                     class="form-control search-input"
-                    placeholder="Αναζήτηση ασθενή (Όνομα, AMKA, AFM, Barcode)..."
+                    placeholder="Αναζήτηση ασθενή (Όνομα, AMKA, AM, Barcode)..."
                   >
                   <button
                     v-if="searchQuery"
@@ -214,17 +214,17 @@
                   <td>
                     <div class="patient-info">
                       <div class="patient-avatar">
+                        <span v-if="!patient.profile_image" style="font-size: 2rem;">{{ getGenderEmoji(patient.gender) }}</span>
                         <img
-                          v-if="patient.profile_image"
+                          v-else
                           :src="patient.profile_image"
                           :alt="patient.full_name"
                         >
-                        <i v-else class="bi bi-person-circle"></i>
                       </div>
                       <div class="patient-details">
                         <strong>{{ patient.full_name }}</strong>
                         <small class="text-muted">
-                          <i :class="patient.gender === 'male' ? 'bi bi-gender-male' : 'bi bi-gender-female'"></i>
+                          {{ getGenderEmoji(patient.gender) }}
                           {{ patient.gender === 'male' ? 'Άνδρας' : 'Γυναίκα' }}
                         </small>
                       </div>
@@ -297,12 +297,12 @@
             <div class="patient-card" @click="navigateToPatient(patient._id)">
               <div class="card-header-custom">
                 <div class="patient-avatar-large">
+                  <span v-if="!patient.profile_image" style="font-size: 3.5rem; line-height: 1;">{{ getGenderEmoji(patient.gender) }}</span>
                   <img
-                    v-if="patient.profile_image"
+                    v-else
                     :src="patient.profile_image"
                     :alt="patient.full_name"
                   >
-                  <i v-else class="bi bi-person-circle"></i>
                 </div>
                 <span
                   v-if="patient.medical_instructions && patient.medical_instructions.length > 0"
@@ -320,7 +320,7 @@
                     <span>{{ patient.barcode || 'N/A' }}</span>
                   </div>
                   <div class="meta-item">
-                    <i :class="patient.gender === 'male' ? 'bi bi-gender-male' : 'bi bi-gender-female'"></i>
+                    {{ getGenderEmoji(patient.gender) }}
                     <span>{{ patient.gender === 'male' ? 'Άνδρας' : 'Γυναίκα' }}</span>
                   </div>
                   <div class="meta-item">
@@ -566,6 +566,21 @@ const sortBy = (field) => {
 const getSortIcon = (field) => {
   if (sortField.value !== field) return 'bi bi-arrow-down-up ms-1'
   return sortDirection.value === 'asc' ? 'bi bi-arrow-up ms-1' : 'bi bi-arrow-down ms-1'
+}
+
+const getGenderEmoji = (gender) => {
+  if (!gender) return '👤'
+  const genderLower = gender.toLowerCase()
+  if (genderLower === 'male' || genderLower === 'άρρεν' || genderLower === 'm') {
+    return '👨'
+  } else if (genderLower === 'female' || genderLower === 'θήλυ' || genderLower === 'f') {
+    return '👩'
+  }
+  return '👤'
+}
+
+const getNurseEmoji = () => {
+  return '👩‍⚕️'
 }
 
 const clearSearch = () => {

@@ -1,10 +1,10 @@
 <template>
   <div id="app">
-    <!-- Use the new navbar component only when authenticated -->
-    <NavbarComponent v-if="authStore.isAuthenticated" />
+    <!-- Sidebar - shown when authenticated -->
+    <SidebarComponent v-if="authStore.isAuthenticated" />
 
     <!-- Main content area -->
-    <main class="main-content" :class="{ 'with-navbar': authStore.isAuthenticated, 'without-navbar': !authStore.isAuthenticated }">
+    <main class="main-content" :class="{ 'with-sidebar': authStore.isAuthenticated, 'without-sidebar': !authStore.isAuthenticated }">
       <div class="content-wrapper">
         <router-view />
       </div>
@@ -33,7 +33,7 @@
 
 <script setup>
 import { useAuthStore } from './stores/auth'
-import NavbarComponent from './components/NavbarComponent.vue'
+import SidebarComponent from './components/SidebarComponent.vue'
 
 const authStore = useAuthStore()
 </script>
@@ -51,14 +51,25 @@ const authStore = useAuthStore()
   flex: 1;
   padding: 0;
   min-height: calc(100vh - 140px); /* Account for footer */
+  transition: margin-left 0.3s ease;
 }
 
-.main-content.with-navbar {
-  margin-top: 0; /* Navbar is positioned relative, no need for top margin */
+/* Desktop - shift content right to accommodate sidebar */
+@media (min-width: 992px) {
+  .main-content.with-sidebar {
+    margin-left: 280px; /* Sidebar width */
+  }
 }
 
-.main-content.without-navbar {
-  min-height: 100vh; /* Full height when no navbar */
+/* Mobile - add top margin for the top bar */
+@media (max-width: 991.98px) {
+  .main-content.with-sidebar {
+    margin-top: 60px; /* Mobile top bar height */
+  }
+}
+
+.main-content.without-sidebar {
+  min-height: 100vh; /* Full height when no sidebar */
 }
 
 .content-wrapper {
@@ -73,6 +84,13 @@ const authStore = useAuthStore()
   padding: 2rem 0;
   margin-top: auto;
   color: var(--text-secondary);
+  transition: margin-left 0.3s ease;
+}
+
+@media (min-width: 992px) {
+  .medical-footer {
+    margin-left: 280px; /* Match sidebar width */
+  }
 }
 
 .medical-footer .btn-outline-primary {

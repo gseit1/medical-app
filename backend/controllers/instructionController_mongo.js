@@ -496,6 +496,7 @@ const verifySafety = async (req, res) => {
 const completeInstruction = async (req, res) => {
   try {
     const instructionId = req.params.id;
+    const currentUser = req.user; // Get current user from auth middleware
 
     // First check if instruction exists and is not already completed
     const instruction = await MedicalInstruction.findById(instructionId);
@@ -511,12 +512,14 @@ const completeInstruction = async (req, res) => {
       });
     }
 
-    // Update instruction status
+    // Update instruction status with nurse information
     const updatedInstruction = await MedicalInstruction.findByIdAndUpdate(
       instructionId,
       { 
         status: 'Completed',
-        completed_at: new Date()
+        completed_at: new Date(),
+        completed_by: currentUser?.id || currentUser?.userId, // Nurse ID
+        completed_by_name: currentUser?.full_name || currentUser?.username // Nurse name
       },
       { new: true }
     );
@@ -528,10 +531,13 @@ const completeInstruction = async (req, res) => {
       });
     }
 
+    console.log('✅ Instruction completed by:', updatedInstruction.completed_by_name);
+
     res.json({
       message: 'Η οδηγία σημειώθηκε ως ολοκληρωμένη',
       instructionId: instructionId,
-      success: true
+      success: true,
+      completedBy: updatedInstruction.completed_by_name
     });
 
   } catch (error) {
@@ -540,6 +546,42 @@ const completeInstruction = async (req, res) => {
       return res.status(404).json({ message: 'Instruction not found' });
     }
     res.status(500).json({ message: 'Server error completing instruction' });
+  }
+};
+
+// Get all instructions (for MedicalInstructionsView dashboard)
+const getAllInstructions = async (req, res) => {
+  try {
+    const instructions = await MedicalInstruction.find()
+      .populate('patient_id', 'full_name name amka barcode blood_type gender age phone')
+      .sort({ createdAt: -1 });
+
+    const formattedInstructions = instructions.map(inst => ({
+      _id: inst._id,
+      id: inst._id,
+      patient_id: inst.patient_id,
+      medication_name: inst.medication_name,
+      dosage: inst.dosage,
+      frequency: inst.frequency,
+      duration: inst.duration,
+      description: inst.description,
+      barcode: inst.barcode,
+      status: inst.status,
+      icd10_code: inst.icd10_code,
+      icd10_description: inst.icd10_description,
+      instructions: inst.instructions,
+      drug_interactions: inst.drug_interactions,
+      safety_alerts: inst.safety_alerts,
+      created_at: inst.createdAt,
+      completed_at: inst.completed_at,
+      completed_by: inst.completed_by,
+      completed_by_name: inst.completed_by_name
+    }));
+
+    res.json(formattedInstructions);
+  } catch (error) {
+    console.error('Error fetching all instructions:', error);
+    res.status(500).json({ message: 'Server error fetching instructions' });
   }
 };
 
@@ -557,7 +599,9 @@ const getInstructionsByPatient = async (req, res) => {
       barcode: inst.barcode,
       status: inst.status,
       created_at: inst.createdAt,
-      completed_at: inst.completed_at
+      completed_at: inst.completed_at,
+      completed_by: inst.completed_by,
+      completed_by_name: inst.completed_by_name // Nurse who completed it
     }));
 
     res.json(formattedInstructions);
@@ -698,6 +742,7 @@ module.exports = {
   verifyBarcodeById,
   verifySafety,
   completeInstruction,
+  getAllInstructions,
   getInstructionsByPatient,
   createInstruction,
   checkMedicationCompleted,

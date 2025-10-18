@@ -1,55 +1,5 @@
 <template>
   <div class="medical-instructions-container">
-    <!-- Hero Section -->
-    <div class="hero-section">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-8">
-            <div class="hero-content">
-              <div class="hero-badge">
-                <i class="bi bi-clipboard2-pulse"></i>
-                <span>Ιατρικές Οδηγίες</span>
-              </div>
-              <h1 class="hero-title">
-                Διαχείριση Ιατρικών 
-                <span class="gradient-text">Οδηγιών</span>
-              </h1>
-              <p class="hero-description">
-                Σύστημα παρακολούθησης φαρμακευτικής θεραπείας με ICD-10 κωδικοποίηση 
-                και ειδοποιήσεις φαρμακικών αλληλεπιδράσεων
-              </p>
-              <div class="hero-stats">
-                <div class="stat-item">
-                  <div class="stat-number">{{ totalInstructions }}</div>
-                  <div class="stat-label">Συνολικές Οδηγίες</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-number">{{ criticalAlerts }}</div>
-                  <div class="stat-label">Κρίσιμες Ειδοποιήσεις</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-number">{{ activePatients }}</div>
-                  <div class="stat-label">Ενεργοί Ασθενείς</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-lg-4">
-            <div class="hero-visual">
-              <div class="medical-icon-container">
-                <i class="bi bi-prescription2"></i>
-              </div>
-              <div class="floating-elements">
-                <div class="floating-pill pill-1">💊</div>
-                <div class="floating-pill pill-2">🧬</div>
-                <div class="floating-pill pill-3">⚕️</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- Instructions List -->
     <div class="instructions-section">
       <div class="container">
@@ -97,93 +47,128 @@
             v-for="instruction in filteredInstructions" 
             :key="instruction._id"
             class="instruction-card"
+            :class="instruction.status.toLowerCase()"
           >
-            <!-- Card Header -->
-            <div class="card-header">
-              <div class="patient-info">
-                <h5 class="patient-name">{{ instruction.patient_id?.full_name || 'Άγνωστος Ασθενής' }}</h5>
-                <div class="patient-details">
-                  <span class="blood-type">{{ instruction.patient_id?.blood_type }}</span>
-                  <span class="amka">ΑΜΚΑ: {{ instruction.patient_id?.amka }}</span>
+            <!-- Card Header with Patient Info -->
+            <div class="card-header-premium">
+              <div class="patient-header">
+                <div class="patient-avatar">
+                  <span style="font-size: 2rem;">{{ getGenderEmoji(instruction.patient_id?.gender) }}</span>
+                </div>
+                <div class="patient-info">
+                  <h5 class="patient-name">{{ instruction.patient_id?.full_name || 'Άγνωστος Ασθενής' }}</h5>
+                  <div class="patient-meta">
+                    <span class="badge bg-danger me-2">{{ instruction.patient_id?.blood_type }}</span>
+                    <span class="badge bg-secondary">ΑΜΚΑ: {{ instruction.patient_id?.amka }}</span>
+                  </div>
                 </div>
               </div>
-              <div class="status-badge" :class="instruction.status.toLowerCase()">
-                {{ getStatusText(instruction.status) }}
+              <div class="status-container">
+                <span class="status-badge" :class="'status-' + instruction.status.toLowerCase()">
+                  {{ getStatusText(instruction.status) }}
+                </span>
               </div>
             </div>
 
             <!-- ICD-10 Information -->
             <div v-if="instruction.icd10_code" class="icd-section">
-              <div class="icd-badge">
+              <div class="icd-header">
                 <i class="bi bi-journal-medical"></i>
-                <span>{{ instruction.icd10_code }}</span>
+                <div class="icd-content">
+                  <span class="icd-code-badge">{{ instruction.icd10_code }}</span>
+                  <p class="icd-description">{{ instruction.icd10_description }}</p>
+                </div>
               </div>
-              <p class="icd-description">{{ instruction.icd10_description }}</p>
             </div>
 
-            <!-- Medication Information -->
-            <div class="medication-section">
+            <!-- Medication Information - Enhanced -->
+            <div class="medication-section-premium">
               <div class="medication-header">
-                <h6 class="medication-name">
+                <div class="medication-icon">
                   <i class="bi bi-capsule"></i>
-                  {{ instruction.medication_name }}
-                </h6>
-                <span class="dosage-badge">{{ instruction.dosage }}</span>
-              </div>
-              <div class="medication-details">
-                <div class="detail-item">
-                  <span class="label">Συχνότητα:</span>
-                  <span class="value">{{ instruction.frequency }}</span>
                 </div>
-                <div class="detail-item">
-                  <span class="label">Διάρκεια:</span>
-                  <span class="value">{{ instruction.duration }}</span>
+                <div class="medication-info">
+                  <h6 class="medication-name">{{ instruction.medication_name }}</h6>
+                  <span class="dosage-badge-premium">{{ instruction.dosage }}</span>
                 </div>
               </div>
-              <p class="instructions-text">{{ instruction.instructions }}</p>
+              
+              <div class="medication-grid">
+                <div class="med-detail">
+                  <span class="detail-label">
+                    <i class="bi bi-hourglass-split"></i>
+                    Συχνότητα
+                  </span>
+                  <span class="detail-value">{{ instruction.frequency }}</span>
+                </div>
+                <div class="med-detail">
+                  <span class="detail-label">
+                    <i class="bi bi-calendar-event"></i>
+                    Διάρκεια
+                  </span>
+                  <span class="detail-value">{{ instruction.duration }}</span>
+                </div>
+                <div class="med-detail" v-if="instruction.barcode">
+                  <span class="detail-label">
+                    <i class="bi bi-upc-scan"></i>
+                    Barcode
+                  </span>
+                  <span class="detail-value barcode-text">{{ instruction.barcode }}</span>
+                </div>
+              </div>
+
+              <div v-if="instruction.instructions" class="instructions-box">
+                <label class="instruction-label">
+                  <i class="bi bi-chat-left-text"></i>
+                  Οδηγίες Χορήγησης
+                </label>
+                <p class="instructions-text">{{ instruction.instructions }}</p>
+              </div>
             </div>
 
-            <!-- Drug Interactions -->
+            <!-- Drug Interactions - Enhanced -->
             <div v-if="instruction.drug_interactions?.length" class="interactions-section">
-              <h6 class="section-title">
+              <div class="section-header">
                 <i class="bi bi-exclamation-triangle-fill"></i>
-                Φαρμακικές Αλληλεπιδράσεις
-              </h6>
+                <h6 class="section-title">Φαρμακικές Αλληλεπιδράσεις</h6>
+                <span class="count-badge">{{ instruction.drug_interactions.length }}</span>
+              </div>
               <div 
                 v-for="interaction in instruction.drug_interactions"
                 :key="interaction._id"
                 class="interaction-item"
-                :class="interaction.severity.toLowerCase()"
+                :class="'interaction-' + interaction.severity.toLowerCase()"
               >
                 <div class="interaction-header">
-                  <span class="interaction-drug">{{ interaction.interaction_with }}</span>
-                  <span class="severity-badge" :class="interaction.severity.toLowerCase()">
+                  <span class="interaction-drug">🔗 {{ interaction.interaction_with }}</span>
+                  <span class="severity-badge" :class="'severity-' + interaction.severity.toLowerCase()">
                     {{ getSeverityText(interaction.severity) }}
                   </span>
                 </div>
                 <p class="interaction-description">{{ interaction.description }}</p>
                 <div class="interaction-recommendation">
-                  <i class="bi bi-info-circle"></i>
-                  {{ interaction.recommendation }}
+                  <i class="bi bi-lightbulb-fill"></i>
+                  <strong>Σύσταση:</strong> {{ interaction.recommendation }}
                 </div>
               </div>
             </div>
 
-            <!-- Safety Alerts -->
+            <!-- Safety Alerts - Enhanced -->
             <div v-if="instruction.safety_alerts?.length" class="alerts-section">
-              <h6 class="section-title">
+              <div class="section-header">
                 <i class="bi bi-shield-exclamation"></i>
-                Ειδοποιήσεις Ασφαλείας
-              </h6>
+                <h6 class="section-title">Ειδοποιήσεις Ασφαλείας</h6>
+                <span class="count-badge">{{ instruction.safety_alerts.length }}</span>
+              </div>
               <div 
                 v-for="alert in instruction.safety_alerts"
                 :key="alert._id"
                 class="alert-item"
-                :class="alert.severity.toLowerCase()"
+                :class="'alert-' + alert.severity.toLowerCase()"
               >
                 <div class="alert-header">
-                  <span class="alert-type">{{ getAlertTypeText(alert.alert_type) }}</span>
-                  <span class="severity-badge" :class="alert.severity.toLowerCase()">
+                  <span class="alert-type">⚠️ {{ getAlertTypeText(alert.alert_type) }}</span>
+                  <span class="severity-badge" :class="'severity-' + alert.severity.toLowerCase()">
                     {{ getSeverityText(alert.severity) }}
                   </span>
                 </div>
@@ -191,16 +176,23 @@
               </div>
             </div>
 
+            <!-- Completion Information -->
+            <div v-if="instruction.status === 'Completed' && instruction.completed_by_name" class="completion-section">
+              <div class="completion-info">
+                <i class="bi bi-check-circle-fill"></i>
+                <div class="completion-details">
+                  <span class="label">Ολοκληρώθηκε από:</span>
+                  <span class="nurse-name">{{ getNurseEmoji() }} {{ instruction.completed_by_name }}</span>
+                </div>
+              </div>
+              <div v-if="instruction.completed_at" class="completion-date">
+                <i class="bi bi-calendar3"></i>
+                {{ formatDate(instruction.completed_at) }}
+              </div>
+            </div>
+
             <!-- Card Actions -->
             <div class="card-actions">
-              <button 
-                v-if="instruction.status === 'Pending'"
-                @click="completeInstruction(instruction._id)"
-                class="btn btn-success btn-sm"
-              >
-                <i class="bi bi-check-circle"></i>
-                Ολοκλήρωση
-              </button>
               <button class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-eye"></i>
                 Λεπτομέρειες
@@ -322,6 +314,32 @@ const getAlertTypeText = (alertType) => {
     'Info': 'Πληροφορία'
   }
   return alertMap[alertType] || alertType
+}
+
+const formatDate = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  return `${day}/${month}/${year} ${hours}:${minutes}`
+}
+
+const getGenderEmoji = (gender) => {
+  if (!gender) return '👤'
+  const genderLower = gender.toLowerCase()
+  if (genderLower === 'male' || genderLower === 'άρρεν' || genderLower === 'm') {
+    return '👨'
+  } else if (genderLower === 'female' || genderLower === 'θήλυ' || genderLower === 'f') {
+    return '👩'
+  }
+  return '👤'
+}
+
+const getNurseEmoji = () => {
+  return '👩‍⚕️'
 }
 
 // Lifecycle
@@ -512,121 +530,435 @@ onMounted(() => {
 
 .instructions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   gap: 2rem;
 }
 
 .instruction-card {
   background: #ffffff;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
   border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
 }
 
 .instruction-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
 }
 
-.card-header {
+.instruction-card.pending {
+  border-left: 4px solid #f59e0b;
+}
+
+.instruction-card.completed {
+  border-left: 4px solid #10b981;
+}
+
+.card-header-premium {
   display: flex;
-  justify-content: between;
+  justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-bottom: 1px solid #e5e7eb;
 }
 
+.patient-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.patient-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-info {
+  flex: 1;
+  min-width: 0;
+}
+
 .patient-name {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1f2937;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.patient-details {
+.patient-meta {
   display: flex;
-  gap: 1rem;
-  font-size: 0.875rem;
-  color: #6b7280;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.blood-type {
-  background: #fef2f2;
-  color: #dc2626;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-weight: 600;
+.status-container {
+  flex-shrink: 0;
 }
 
 .status-badge {
   padding: 0.5rem 1rem;
-  border-radius: 12px;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
+  display: inline-block;
 }
 
-.status-badge.pending {
+.status-badge.status-pending {
   background: #fef3c7;
-  color: #d97706;
+  color: #b45309;
 }
 
-.status-badge.completed {
+.status-badge.status-completed {
   background: #d1fae5;
-  color: #059669;
+  color: #047857;
 }
 
+/* ICD Section */
 .icd-section {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+  padding: 1.25rem 1.5rem;
   background: #f0f9ff;
   border-radius: 12px;
   border-left: 4px solid #0ea5e9;
+  margin: 0 1.5rem 1.5rem;
 }
 
-.icd-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
+.icd-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.icd-header i {
+  font-size: 1.25rem;
+  color: #0ea5e9;
+  flex-shrink: 0;
+}
+
+.icd-content {
+  flex: 1;
+}
+
+.icd-code-badge {
+  display: inline-block;
   background: #0ea5e9;
   color: #ffffff;
   padding: 0.25rem 0.75rem;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 0.75rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
 }
 
-.medication-section {
-  margin-bottom: 1.5rem;
+.icd-description {
+  font-size: 0.875rem;
+  color: #1e40af;
+  margin: 0;
+}
+
+/* Medication Section Premium */
+.medication-section-premium {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .medication-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
+.medication-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.medication-info {
+  flex: 1;
+}
+
 .medication-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.3rem;
+}
+
+.dosage-badge-premium {
+  display: inline-block;
+  background: #dcfce7;
+  color: #166534;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.medication-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.med-detail {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.detail-label {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+.detail-label i {
+  color: #1f2937;
+}
+
+.detail-value {
+  font-size: 0.95rem;
   font-weight: 700;
   color: #1f2937;
 }
 
-.dosage-badge {
-  background: #dcfce7;
-  color: #166534;
-  padding: 0.25rem 0.75rem;
+.detail-value.barcode-text {
+  font-family: 'Courier New', monospace;
+  color: #059669;
+  font-size: 0.85rem;
+}
+
+.instructions-box {
+  padding: 1rem;
+  background: #fef9e7;
   border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  border-left: 4px solid #f59e0b;
+}
+
+.instruction-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b45309;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.instructions-text {
+  font-size: 0.9rem;
+  color: #451a03;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Interactions Section */
+.interactions-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.section-header i {
+  font-size: 1.2rem;
+  color: #dc2626;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.count-badge {
+  margin-left: auto;
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.interaction-item {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #ef4444;
+  background: #fef2f2;
+}
+
+.interaction-item.interaction-high {
+  border-left-color: #dc2626;
+  background: #fee2e2;
+}
+
+.interaction-item.interaction-moderate {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.interaction-item.interaction-low {
+  border-left-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.interaction-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.interaction-drug {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.severity-badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.severity-badge.severity-critical {
+  background: #991b1b;
+  color: #ffffff;
+}
+
+.severity-badge.severity-high {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.severity-badge.severity-moderate {
+  background: #f59e0b;
+  color: #ffffff;
+}
+
+.severity-badge.severity-low {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.interaction-description {
+  font-size: 0.85rem;
+  color: #374151;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.interaction-recommendation {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #1f2937;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 6px;
+}
+
+.interaction-recommendation i {
+  color: #10b981;
+  flex-shrink: 0;
+}
+
+/* Alerts Section */
+.alerts-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.alert-item {
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  background: #fffbeb;
+}
+
+.alert-item.alert-high {
+  border-left-color: #dc2626;
+  background: #fee2e2;
+}
+
+.alert-item.alert-critical {
+  border-left-color: #991b1b;
+  background: #fecaca;
+}
+
+.alert-item.alert-moderate {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.alert-item.alert-low {
+  border-left-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.alert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.alert-type {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.alert-message {
+  font-size: 0.85rem;
+  color: #374151;
+  line-height: 1.4;
+  margin: 0;
 }
 
 .medication-details {
@@ -649,8 +981,15 @@ onMounted(() => {
   color: #1f2937;
 }
 
-.interactions-section, .alerts-section {
-  margin-bottom: 1.5rem;
+.loading-container, .empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #6b7280;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  margin-bottom: 1rem;
 }
 
 .section-title {
@@ -726,6 +1065,63 @@ onMounted(() => {
   padding: 0.75rem;
   border-radius: 8px;
   margin-top: 0.5rem;
+}
+
+/* Completion Section */
+.completion-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border: 1px solid #d1fae5;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.completion-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.completion-info i {
+  font-size: 1.3rem;
+  color: #10b981;
+}
+
+.completion-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.completion-details .label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.nurse-name {
+  font-weight: 600;
+  color: #047857;
+  font-size: 0.95rem;
+}
+
+.completion-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+}
+
+.completion-date i {
+  color: #10b981;
 }
 
 .card-actions {
