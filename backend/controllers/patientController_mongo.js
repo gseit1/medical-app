@@ -12,6 +12,7 @@ const getAllPatients = async (req, res) => {
       const referrals = await Referral.find({ patient_id: patient._id });
       
       return {
+        _id: patient._id,
         id: patient._id,
         full_name: patient.full_name,
         amka: patient.amka,
@@ -59,6 +60,7 @@ const getAllPatientsWithInstructions = async (req, res) => {
       const medicalInstructions = await MedicalInstruction.find({ patient_id: patient._id });
       
       return {
+        _id: patient._id,
         id: patient._id,
         full_name: patient.full_name,
         amka: patient.amka,
@@ -102,6 +104,7 @@ const getPatientById = async (req, res) => {
     const referrals = await Referral.find({ patient_id: patientId });
 
     const patientData = {
+      _id: patient._id,
       id: patient._id,
       full_name: patient.full_name,
       amka: patient.amka,

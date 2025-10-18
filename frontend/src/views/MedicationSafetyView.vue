@@ -57,598 +57,437 @@
       </div>
     </div>
 
-    <!-- Step 1: Advanced Patient Selection -->
+    <!-- Step 1: Patient Barcode Scanner - Professional Hospital GUI -->
     <div v-if="currentStep === 1" class="main-content">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-10">
-            <div class="selection-card">
-              <div class="card-header-modern">
-                <div class="header-content">
-                  <div class="header-icon">
-                    <i class="bi bi-person-check"></i>
-                  </div>
-                  <div class="header-text">
-                    <h2>Επιλογή Ασθενή</h2>
-                    <p>Ταυτοποιήστε τον ασθενή για ασφαλή χορήγηση φαρμάκου</p>
-                  </div>
-                  <div class="header-badge">
-                    <span class="step-badge">Βήμα 1/2</span>
-                  </div>
-                </div>
-              </div>
+      <div class="scanner-wrapper">
+        <!-- Professional Header -->
+        <div class="scanner-pro-header">
+          <div class="header-glow"></div>
+          <div class="header-content">
+            <div class="header-step">
+              <span class="step-number">1</span>
+              <span class="step-label">Ταυτοποίηση Ασθενή</span>
+            </div>
+            <h1 class="scanner-title">Σάρωση Barcode</h1>
+            <p class="scanner-subtitle">Τοποθετήστε το barcode του ασθενή μπροστά από την κάμερα</p>
+          </div>
+        </div>
+
+        <!-- Main Scanner Area -->
+        <div class="scanner-main">
+          <!-- Scanning Mode -->
+          <div v-if="!patientBarcodeScanned" class="scanning-mode">
+            <!-- Premium Scanner Frame -->
+            <div class="scanner-frame-pro">
+              <BarcodeScanner @barcode-detected="handlePatientBarcodeDetected" />
               
-              <div class="card-body-modern">
-                <!-- Search & Filter -->
-                <div class="search-section">
-                  <div class="search-wrapper">
-                    <i class="bi bi-search search-icon"></i>
-                    <input 
-                      type="text" 
-                      class="form-control search-input" 
-                      placeholder="Αναζήτηση ασθενή (όνομα, ΑΜΚΑ)..."
-                      v-model="patientSearch"
-                    >
-                    <div class="search-filters">
-                      <button class="filter-btn" :class="{ active: activeFilter === 'all' }" @click="setFilter('all')">
-                        Όλοι ({{ patients.length }})
-                      </button>
-                      <button class="filter-btn" :class="{ active: activeFilter === 'pending' }" @click="setFilter('pending')">
-                        Εκκρεμή Φάρμακα ({{ getPendingCount() }})
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Patient Barcode Scanner -->
-                <div class="patient-scanner-section">
-                  <div class="scanner-card">
-                    <div class="scanner-header-simple">
-                      <i class="bi bi-upc-scan me-2"></i>
-                      <h4>Σάρωση Ασθενή</h4>
-                    </div>
-                    <div class="scanner-body-simple">
-                      <div v-if="!patientBarcodeScanned" class="scanner-active-simple">
-                        <BarcodeScanner @barcode-detected="handlePatientBarcodeDetected" />
-                        <p class="scanner-instruction-simple">
-                          <i class="bi bi-qr-code me-2"></i>
-                          Σαρώστε το barcode του ασθενή για άμεση επιλογή
-                        </p>
-                      </div>
-                      <div v-else class="scanner-result-simple">
-                        <i class="bi bi-check-circle-fill text-success"></i>
-                        <span>Ασθενής εντοπίστηκε: {{ patientBarcodeScanned }}</span>
-                        <button class="btn-clear-simple" @click="clearPatientBarcode">
-                          <i class="bi bi-x"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Patients Grid -->
-                <div class="patients-grid" v-if="filteredPatients.length > 0">
-                  <div 
-                    v-for="patient in filteredPatients" 
-                    :key="patient.id"
-                    class="patient-card-modern"
-                    @click="selectPatient(patient)"
-                  >
-                    <div class="patient-avatar">
-                      <i class="bi bi-person-fill"></i>
-                      <div class="online-indicator"></div>
-                    </div>
-                    
-                    <div class="patient-info">
-                      <h4 class="patient-name">{{ patient.full_name }}</h4>
-                      <div class="patient-details">
-                        <div class="detail-item">
-                          <i class="bi bi-credit-card-2-front"></i>
-                          <span>{{ patient.amka }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <i class="bi bi-droplet-fill"></i>
-                          <span>{{ patient.blood_type }}</span>
-                        </div>
-                      </div>
-                      
-                      <!-- Medication Summary -->
-                      <div class="medication-summary">
-                        <small class="summary-text">{{ getMedicationSummary(patient.id) }}</small>
-                      </div>
-                    </div>
-                    
-                    <!-- Medication Status Badge -->
-                    <div class="medication-status-badge" 
-                         :class="getPatientMedicationStatus(patient.id).class">
-                      <div class="status-icon">
-                        <i :class="getPatientMedicationStatus(patient.id).icon"></i>
-                      </div>
-                      <div class="status-info">
-                        <div class="status-text">{{ getPatientMedicationStatus(patient.id).text }}</div>
-                        <div class="status-subtext" v-if="patientMedications[patient.id]?.total > 0">
-                          {{ patientMedications[patient.id]?.pending }}/{{ patientMedications[patient.id]?.total }} φάρμακα
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div class="selection-arrow">
-                      <i class="bi bi-arrow-right"></i>
-                    </div>
-                  </div>
-                </div>
+              <!-- Advanced Overlay -->
+              <div class="scanner-overlay-pro">
+                <!-- Animated Scan Line -->
+                <div class="scan-line-pro"></div>
                 
-                <!-- Empty State -->
-                <div v-else class="empty-state">
-                  <div class="empty-icon">
-                    <i class="bi bi-people"></i>
+                <!-- Corner Markers with Glow -->
+                <div class="corners-container">
+                  <div class="corner-marker corner-tl">
+                    <span class="corner-line h"></span>
+                    <span class="corner-line v"></span>
                   </div>
-                  <h3>Δεν βρέθηκαν ασθενείς</h3>
-                  <p>Δοκιμάστε να αλλάξετε τα κριτήρια αναζήτησης</p>
+                  <div class="corner-marker corner-tr">
+                    <span class="corner-line h"></span>
+                    <span class="corner-line v"></span>
+                  </div>
+                  <div class="corner-marker corner-bl">
+                    <span class="corner-line h"></span>
+                    <span class="corner-line v"></span>
+                  </div>
+                  <div class="corner-marker corner-br">
+                    <span class="corner-line h"></span>
+                    <span class="corner-line v"></span>
+                  </div>
+                </div>
+
+                <!-- Center Focus Circle -->
+                <div class="focus-circle">
+                  <div class="focus-dot"></div>
                 </div>
               </div>
+            </div>
+
+            <!-- Status & Tips -->
+            <div class="scanner-status-area">
+              <div class="status-badge">
+                <span class="status-indicator"></span>
+                <span class="status-text">Έτοιμο για Σάρωση</span>
+              </div>
+
+              <div class="tips-grid">
+                <div class="tip-item">
+                  <div class="tip-icon-box">
+                    <i class="bi bi-phone"></i>
+                  </div>
+                  <span class="tip-text">Κρατήστε Σταθερά</span>
+                </div>
+                <div class="tip-item">
+                  <div class="tip-icon-box">
+                    <i class="bi bi-brightness-high"></i>
+                  </div>
+                  <span class="tip-text">Καλός Φωτισμός</span>
+                </div>
+                <div class="tip-item">
+                  <div class="tip-icon-box">
+                    <i class="bi bi-bullseye"></i>
+                  </div>
+                  <span class="tip-text">Κεντράρετε</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Success Mode -->
+          <div v-else class="success-mode">
+            <!-- Success Animation -->
+            <div class="success-animation-wrapper">
+              <div class="success-circle-bg">
+                <svg class="success-checkmark" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="45" class="circle-outline"/>
+                  <path d="M 30 50 L 45 65 L 70 40" class="checkmark-path" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="success-pulses">
+                <span class="pulse pulse-1"></span>
+                <span class="pulse pulse-2"></span>
+                <span class="pulse pulse-3"></span>
+              </div>
+            </div>
+
+            <!-- Result Info -->
+            <div class="result-info">
+              <h2 class="result-title">Επιτυχής Σάρωση!</h2>
+              <p class="result-subtitle">Ο ασθενής αναγνωρίστηκε επιτυχώς</p>
+
+              <!-- Barcode Info Card -->
+              <div class="barcode-card">
+                <div class="barcode-icon-wrapper">
+                  <i class="bi bi-upc"></i>
+                </div>
+                <div class="barcode-info">
+                  <div class="barcode-label">Κωδικός Ασθενή</div>
+                  <div class="barcode-value">{{ patientBarcodeScanned }}</div>
+                </div>
+              </div>
+
+              <!-- Loading Progress -->
+              <div class="loading-progress-wrapper">
+                <div class="progress-bar">
+                  <div class="progress-fill"></div>
+                </div>
+                <div class="loading-text">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                  Φόρτωση δεδομένων ασθενή...
+                </div>
+              </div>
+
+              <!-- Rescan Button -->
+              <button class="btn-rescan-pro" @click="clearPatientBarcode">
+                <i class="bi bi-arrow-clockwise"></i>
+                <span>Σάρωση Διαφορετικού Ασθενή</span>
+              </button>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Step 2: Advanced Medication Scanning -->
-    <div v-if="currentStep === 2" class="main-content">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-10">
-            <div class="scanning-card">
-              <div class="card-header-modern scanning-header">
-                <div class="header-content">
-                  <div class="header-icon scanning-icon">
-                    <i class="bi bi-upc-scan"></i>
-                    <div class="scan-pulse"></div>
-                  </div>
-                  <div class="header-text">
-                    <h2>AI-Powered Medication Verification</h2>
-                    <p>Σαρώστε το φάρμακο για επαλήθευση ασφαλείας</p>
-                  </div>
-                  <button class="btn-back" @click="goBackToPatientSelection">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Αλλαγή Ασθενή</span>
-                  </button>
-                </div>
+    <!-- Step 2: Professional Medication Scanner - Two Column Layout -->
+    <div v-if="currentStep === 2" class="main-content step2-layout">
+      <!-- Professional Header -->
+      <div class="scanner-pro-header">
+        <div class="header-glow"></div>
+        <div class="header-content">
+          <div class="header-step">
+            <span class="step-number">2</span>
+            <span class="step-label">Σάρωση & Επαλήθευση Φαρμάκου</span>
+          </div>
+          <h1 class="scanner-title">Φαρμακοασφάλεια</h1>
+          <p class="scanner-subtitle">Σαρώστε το barcode του φαρμάκου για AI-ενισχυμένη επαλήθευση</p>
+          <button class="btn-back-pro" @click="goBackToPatientSelection">
+            <i class="bi bi-arrow-left"></i>
+            Αλλαγή Ασθενή
+          </button>
+        </div>
+      </div>
+
+      <!-- Two Column Container -->
+      <div class="step2-two-column">
+        <!-- Left Column: Medical Instructions -->
+        <div class="step2-left-column">
+          <div class="instructions-container">
+            <!-- Patient Info Summary -->
+            <div class="patient-summary-card-compact">
+              <div class="summary-patient-avatar">
+                <i class="bi bi-person-fill"></i>
               </div>
-              
-              <div class="card-body-modern">
-                <!-- Selected Patient Banner -->
-                <div class="patient-banner">
-                  <div class="patient-avatar-large">
-                    <i class="bi bi-person-fill"></i>
-                  </div>
-                  <div class="patient-details-large">
-                    <h3>{{ selectedPatient.full_name }}</h3>
-                    <div class="patient-meta">
-                      <span class="meta-item">
-                        <i class="bi bi-credit-card-2-front"></i>
-                        ΑΜΚΑ: {{ selectedPatient.amka }}
-                      </span>
-                      <span class="meta-item">
-                        <i class="bi bi-droplet-fill"></i>
-                        {{ selectedPatient.blood_type }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="safety-indicator">
-                    <div class="indicator-dot online"></div>
-                    <span>Verified Patient</span>
-                  </div>
-                </div>
-                <!-- Patient's Medical Instructions -->
-                <div class="medications-section">
-                  <div class="section-header">
-                    <h3>
-                      <i class="bi bi-capsule-pill me-2"></i>
-                      Assigned Medications
-                    </h3>
-                    <div class="medication-summary">
-                      <span class="summary-badge pending">
-                        {{ selectedPatient.medical_instructions?.filter(i => i.status === 'Pending').length || 0 }} Pending
-                      </span>
-                      <span class="summary-badge completed">
-                        {{ selectedPatient.medical_instructions?.filter(i => i.status === 'Completed').length || 0 }} Completed
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div class="medications-grid">
-                    <div 
-                      v-for="instruction in selectedPatient.medical_instructions" 
-                      :key="instruction.id"
-                      class="medication-card-modern"
-                      :class="{
-                        'completed': instruction.status === 'Completed',
-                        'pending': instruction.status === 'Pending'
-                      }"
-                    >
-                      <div class="medication-header">
-                        <div class="medication-icon">
-                          <i class="bi bi-prescription2"></i>
-                        </div>
-                        <div class="medication-info">
-                          <h4>{{ instruction.description }}</h4>
-                          <p class="barcode-info">
-                            <i class="bi bi-upc me-1"></i>
-                            {{ instruction.barcode }}
-                          </p>
-                        </div>
-                        <div class="status-badge" :class="instruction.status.toLowerCase()">
-                          <i :class="instruction.status === 'Completed' ? 'bi bi-check-circle-fill' : 'bi bi-clock'"></i>
-                          {{ instruction.status === 'Completed' ? 'Χορηγήθηκε' : 'Εκκρεμή' }}
-                        </div>
-                      </div>
-                      
-                      <div class="medication-timeline">
-                        <div class="timeline-item">
-                          <i class="bi bi-plus-circle"></i>
-                          <span>Δημιουργήθηκε: {{ formatDateTime(instruction.created_at) }}</span>
-                        </div>
-                        <div v-if="instruction.status === 'Completed'" class="timeline-item completed">
-                          <i class="bi bi-check-circle-fill"></i>
-                          <span>Χορηγήθηκε: {{ formatDateTime(instruction.completed_at) }}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Advanced Barcode Scanner -->
-                <div class="scanner-section">
-                  <div class="scanner-header">
-                    <h3>
-                      <i class="bi bi-camera me-2"></i>
-                      Barcode Scanner
-                    </h3>
-                    <div class="scanner-status" :class="{ active: !scannedBarcode, completed: scannedBarcode }">
-                      <div class="status-dot"></div>
-                      <span v-if="!scannedBarcode">Ready to Scan</span>
-                      <span v-else>Barcode Detected</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Scanner Interface -->
-                  <div class="scanner-interface">
-                    <div v-if="!scannedBarcode" class="scanner-active">
-                      <div class="scanner-frame">
-                        <BarcodeScanner @barcode-detected="handleBarcodeDetected" />
-                        <div class="scan-overlay">
-                          <div class="scan-line"></div>
-                          <div class="corner corner-tl"></div>
-                          <div class="corner corner-tr"></div>
-                          <div class="corner corner-bl"></div>
-                          <div class="corner corner-br"></div>
-                        </div>
-                      </div>
-                      <p class="scanner-instruction">
-                        <i class="bi bi-camera me-2"></i>
-                        Position the barcode within the frame and it will scan automatically
-                      </p>
-                    </div>
-                    
-                    <!-- Scanned Result -->
-                    <div v-else class="scanner-result">
-                      <div class="result-card">
-                        <div class="result-icon">
-                          <i class="bi bi-upc-scan"></i>
-                        </div>
-                        <div class="result-info">
-                          <h4>Barcode Detected Successfully</h4>
-                          <p class="barcode-display">{{ scannedBarcode }}</p>
-                        </div>
-                        <button class="btn-rescan" @click="clearBarcode">
-                          <i class="bi bi-arrow-clockwise"></i>
-                          Scan Again
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- AI Verification Button -->
-                  <div v-if="scannedBarcode" class="verification-section">
-                    <button 
-                      class="verification-btn" 
-                      @click="verifyMedication"
-                      :disabled="loading"
-                      :class="{ loading: loading }"
-                    >
-                      <div class="btn-content">
-                        <div class="btn-icon">
-                          <i v-if="loading" class="bi bi-arrow-repeat spin"></i>
-                          <i v-else class="bi bi-shield-check"></i>
-                        </div>
-                        <div class="btn-text">
-                          <span class="main-text">{{ loading ? 'Analyzing...' : 'AI Safety Verification' }}</span>
-                          <span class="sub-text">{{ loading ? 'Please wait' : 'Click to verify medication safety' }}</span>
-                        </div>
-                      </div>
-                      <div class="btn-glow"></div>
-                    </button>
-                  </div>
-                </div>
-
-            <!-- Error Message -->
-            <div v-if="error" class="alert alert-danger">
-              <i class="bi bi-exclamation-triangle"></i>
-              {{ error }}
+              <div class="summary-patient-info">
+                <h4>{{ selectedPatient.full_name }}</h4>
+                <p>ΑΜΚΑ: {{ selectedPatient.amka }}</p>
+                <p>ΟΜΑ: {{ selectedPatient.blood_type }}</p>
+              </div>
             </div>
 
-            <!-- Verification Result -->
-            <div v-if="verificationResult" class="mt-4">
-              <!-- SUCCESS: Correct Medication -->
-              <div v-if="verificationResult.success && verificationResult.verified" class="alert alert-success">
-                <div class="d-flex align-items-center mb-3">
-                  <i class="bi bi-check-circle-fill fs-3 me-3 text-success"></i>
-                  <div>
-                    <h5 class="mb-1">✅ ΣΩΣΤΟ ΦΑΡΜΑΚΟ</h5>
-                    <p class="mb-0">Το φάρμακο είναι σωστό για αυτόν τον ασθενή</p>
-                  </div>
-                </div>
-                
-                <!-- Medication Details -->
-                <div class="bg-light p-3 rounded">
-                  <h6>Στοιχεία Φαρμάκου:</h6>
-                  <p class="mb-1"><strong>Περιγραφή:</strong> {{ verificationResult.instruction.description }}</p>
-                  <p class="mb-1"><strong>Barcode:</strong> {{ verificationResult.instruction.barcode }}</p>
-                  <p class="mb-1">
-                    <strong>Κατάσταση:</strong> 
-                    <span class="badge" :class="verificationResult.instruction.status === 'Completed' ? 'bg-success' : 'bg-warning text-dark'">
-                      {{ verificationResult.instruction.status === 'Completed' ? 'Χορηγήθηκε' : 'Εκκρεμή' }}
+            <!-- Medical Instructions List -->
+            <div class="medications-list">
+              <h3 class="medications-title">
+                <i class="bi bi-capsule"></i>
+                Φάρμακα προς Χορήγηση
+              </h3>
+              
+              <div v-if="selectedPatient.medical_instructions && selectedPatient.medical_instructions.length > 0" class="instructions-scroll">
+                <div v-for="instruction in selectedPatient.medical_instructions" 
+                     :key="instruction.id"
+                     class="instruction-card"
+                     :class="{ 'completed': instruction.status === 'Completed' }">
+                  
+                  <!-- Status Badge -->
+                  <div class="instruction-status">
+                    <span v-if="instruction.status === 'Completed'" class="status-badge completed">
+                      <i class="bi bi-check-circle-fill"></i> Χορηγήθηκε
                     </span>
-                  </p>
-                  <!-- Show completion time if available -->
-                  <p class="mb-0" v-if="verificationResult.instruction.status === 'Completed' && verificationResult.instruction.completed_at">
-                    <strong>Χορηγήθηκε στις:</strong> {{ formatDateTime(verificationResult.instruction.completed_at) }}
-                  </p>
-                </div>
+                    <span v-else class="status-badge pending">
+                      <i class="bi bi-hourglass-split"></i> Εκκρεμή
+                    </span>
+                  </div>
 
-                <!-- Action Buttons -->
-                <div class="mt-3 d-flex gap-2">
-                  <button 
-                    v-if="verificationResult.instruction.status !== 'Completed'" 
-                    class="btn btn-success" 
-                    @click="markAsCompleted"
-                  >
-                    <i class="bi bi-check-square"></i> Επιβεβαίωση Χορήγησης
-                  </button>
-                  
-                  <button class="btn btn-outline-primary" @click="scanNextMedication">
-                    <i class="bi bi-plus-circle"></i> Σκάναρε Άλλο Φάρμακο
-                  </button>
+                  <!-- Instruction Details -->
+                  <div class="instruction-details">
+                    <h4 class="medication-name">{{ instruction.medication_name || instruction.description }}</h4>
+                    
+                    <div class="detail-row">
+                      <span class="detail-label">Δοσολογία:</span>
+                      <span class="detail-value">{{ instruction.dosage }}</span>
+                    </div>
+                    
+                    <div v-if="instruction.frequency" class="detail-row">
+                      <span class="detail-label">Συχνότητα:</span>
+                      <span class="detail-value">{{ instruction.frequency }}</span>
+                    </div>
+                    
+                    <div v-if="instruction.route" class="detail-row">
+                      <span class="detail-label">Οδός:</span>
+                      <span class="detail-value">{{ instruction.route }}</span>
+                    </div>
+                    
+                    <div class="detail-row">
+                      <span class="detail-label">Barcode:</span>
+                      <span class="detail-value barcode-value">{{ instruction.barcode }}</span>
+                    </div>
+
+                    <!-- Full Description -->
+                    <div class="instruction-description">
+                      {{ instruction.description }}
+                    </div>
+                  </div>
                 </div>
+              </div>
+              <div v-else class="no-medications">
+                <i class="bi bi-inbox"></i>
+                <p>Δεν υπάρχουν φάρμακα για χορήγηση</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column: Scanner -->
+        <div class="step2-right-column">
+          <div class="scanner-wrapper-compact">
+            <!-- Scanning Mode -->
+            <div v-if="!scannedBarcode" class="scanning-mode-compact">
+              <!-- Premium Scanner Frame -->
+              <div class="scanner-frame-pro-compact">
+                <BarcodeScanner @barcode-detected="handleBarcodeDetected" />
                 
-                <div class="mt-2" v-if="verificationResult.instruction.status === 'Completed'">
-                  <div class="alert alert-info mb-0">
-                    <i class="bi bi-info-circle"></i>
-                    Το φάρμακο έχει ήδη χορηγηθεί. Μπορείτε να σκανάρετε άλλο φάρμακο για αυτόν τον ασθενή.
+                <!-- Advanced Overlay -->
+                <div class="scanner-overlay-pro">
+                  <!-- Animated Scan Line -->
+                  <div class="scan-line-pro"></div>
+                  
+                  <!-- Corner Markers -->
+                  <div class="corners-container">
+                    <div class="corner-marker corner-tl">
+                      <span class="corner-line h"></span>
+                      <span class="corner-line v"></span>
+                    </div>
+                    <div class="corner-marker corner-tr">
+                      <span class="corner-line h"></span>
+                      <span class="corner-line v"></span>
+                    </div>
+                    <div class="corner-marker corner-bl">
+                      <span class="corner-line h"></span>
+                      <span class="corner-line v"></span>
+                    </div>
+                    <div class="corner-marker corner-br">
+                      <span class="corner-line h"></span>
+                      <span class="corner-line v"></span>
+                    </div>
+                  </div>
+
+                  <!-- Center Focus Circle -->
+                  <div class="focus-circle">
+                    <div class="focus-dot"></div>
                   </div>
                 </div>
               </div>
 
-              <!-- ERROR: Wrong Medication or Safety Issue -->
-              <div v-else class="alert" :class="getSeverityClass(verificationResult.severity)">
-                <div class="d-flex align-items-center mb-3">
-                  <i class="fs-3 me-3" :class="getAlertIcon(verificationResult.alertType)"></i>
-                  <div>
-                    <h5 class="mb-1">{{ verificationResult.message }}</h5>
-                    <p class="mb-0 fw-bold">{{ verificationResult.details }}</p>
-                  </div>
+              <!-- Status & Tips -->
+              <div class="scanner-status-area-compact">
+                <div class="status-badge">
+                  <span class="status-indicator"></span>
+                  <span class="status-text">Έτοιμο για Σάρωση</span>
                 </div>
-                
-                <!-- Safety Instructions based on Alert Type -->
-                <div class="bg-light p-3 rounded mt-3">
-                  <h6 class="text-danger">
-                    <i class="bi bi-shield-exclamation"></i> Οδηγίες Ασφαλείας:
-                  </h6>
-                  
-                  <!-- Drug Interaction Alert -->
-                  <div v-if="verificationResult.alertType === 'DRUG_INTERACTION'">
-                    <div class="alert alert-danger mb-2">
-                      <strong>🚨 ΚΡΙΤΙΚΗ ΑΝΤΕΝΔΕΙΞΗ:</strong> Συνχορήγηση Φαρμάκων
-                    </div>
-                    <ul class="mb-2">
-                      <li><strong>ΜΗ</strong> χορηγήσετε αυτό το φάρμακο</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Επικοινωνήστε άμεσα με τον θεράποντα ιατρό</li>
-                    </ul>
+
+                <div class="tips-grid-compact">
+                  <div class="tip-item-compact">
+                    <i class="bi bi-pills"></i>
+                    <span>Δείχνε</span>
                   </div>
-                  
-                  <!-- Allergy Alert -->
-                  <div v-else-if="verificationResult.alertType === 'ALLERGY'">
-                    <div class="alert alert-danger mb-2">
-                      <strong>🚨 ΑΛΛΕΡΓΙΑ ΑΣΘΕΝΗ:</strong> Κίνδυνος Αναφυλακτικής Αντίδρασης
-                    </div>
-                    <ul class="mb-2">
-                      <li><strong>ΑΠΑΓΟΡΕΥΕΤΑΙ</strong> η χορήγηση - Αλλεργία ασθενή</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Ενημερώστε άμεσα τον ιατρό</li>
-                    </ul>
+                  <div class="tip-item-compact">
+                    <i class="bi bi-brightness-high"></i>
+                    <span>Φως</span>
                   </div>
-                  
-                  <!-- Duplicate Medication Alert -->
-                  <div v-else-if="verificationResult.alertType === 'DUPLICATE'">
-                    <div class="alert alert-warning mb-2">
-                      <strong>⚠️ ΔΙΠΛΗ ΔΟΣΗ:</strong> Ήδη Χορηγηθέν Φάρμακο
-                    </div>
-                    <ul class="mb-2">
-                      <li>Το φάρμακο έχει ήδη χορηγηθεί σήμερα</li>
-                      <li>Ελέγξτε το ιστορικό χορηγήσεων</li>
-                      <li>Επιβεβαιώστε με τον ιατρό πριν συνεχίσετε</li>
-                    </ul>
+                  <div class="tip-item-compact">
+                    <i class="bi bi-eye"></i>
+                    <span>Κέντρο</span>
                   </div>
-                  
-                  <!-- Wrong Medication Alert -->
-                  <div v-else-if="verificationResult.alertType === 'WRONG_MEDICATION'">
-                    <div class="alert alert-danger mb-2">
-                      <strong>🚨 ΛΑΘΟΣ ΦΑΡΜΑΚΟ:</strong> Μη Αντιστοιχία με Εντολή Ιατρού
-                    </div>
-                    <ul class="mb-2">
-                      <li><strong>ΣΤΑΜΑΤΗΣΤΕ</strong> - Το σαρωμένο φάρμακο δεν αντιστοιχεί</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Βρείτε το σωστό φάρμακο πριν συνεχίσετε</li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Overdose Alert -->
-                  <div v-else-if="verificationResult.alertType === 'OVERDOSE'">
-                    <div class="alert alert-danger mb-2">
-                      <strong>🚨 ΥΠΕΡΔΟΣΟΛΟΓΙΑ:</strong> Δόση Υπερβαίνει τα Όρια Ασφαλείας
-                    </div>
-                    <ul class="mb-2">
-                      <li><strong>ΜΗ ΧΟΡΗΓΗΣΕΤΕ</strong> - Υπερβολική δόση</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Επικοινωνήστε άμεσα με τον ιατρό για διόρθωση</li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Wrong Timing Alert -->
-                  <div v-else-if="verificationResult.alertType === 'WRONG_TIME'">
-                    <div class="alert alert-warning mb-2">
-                      <strong>⚠️ ΛΑΘΟΣ ΧΡΟΝΟΣ:</strong> Εκτός Παραθύρου Ασφαλείας
-                    </div>
-                    <ul class="mb-2">
-                      <li>Η χορήγηση είναι εκτός του προγραμματισμένου χρόνου</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Καταγράψτε την απόκλιση στο σύστημα</li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Wrong Route Alert -->
-                  <div v-else-if="verificationResult.alertType === 'WRONG_ROUTE'">
-                    <div class="alert alert-danger mb-2">
-                      <strong>🚨 ΛΑΘΟΣ ΟΔΟΣ ΧΟΡΗΓΗΣΗΣ:</strong> P.O. vs IV
-                    </div>
-                    <ul class="mb-2">
-                      <li><strong>ΣΤΑΜΑΤΗΣΤΕ</strong> - Το σκεύασμα δεν αντιστοιχεί στην οδό</li>
-                      <li>{{ verificationResult.recommendation }}</li>
-                      <li>Βρείτε το σωστό σκεύασμα</li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Generic Error -->
-                  <div v-else>
-                    <ul class="mb-0">
-                      <li><strong>ΜΗ</strong> χορηγήσετε αυτό το φάρμακο</li>
-                      <li>Ελέγξτε ξανά την ταυτότητα του ασθενή</li>
-                      <li>Βεβαιωθείτε ότι έχετε το σωστό φάρμακο</li>
-                      <li>Συμβουλευθείτε τον επιβλέποντα ιατρό</li>
-                    </ul>
-                  </div>
-                </div>
-                
-                <!-- Action Buttons -->
-                <div class="mt-3 d-flex gap-2">
-                  <button class="btn btn-danger" @click="contactPhysician">
-                    <i class="bi bi-telephone-fill"></i> Επικοινωνία με Ιατρό
-                  </button>
-                  <button class="btn btn-outline-secondary" @click="scanNextMedication">
-                    <i class="bi bi-arrow-clockwise"></i> Νέα Σάρωση
-                  </button>
                 </div>
               </div>
             </div>
 
-                <!-- Verification Results Section -->
-                <div v-if="verificationResult" class="results-section">
-                  <!-- Success Result -->
-                  <div v-if="verificationResult.success && verificationResult.verified" class="result-success">
-                    <div class="success-header">
-                      <div class="success-icon">
-                        <i class="bi bi-check-circle-fill"></i>
-                      </div>
-                      <div class="success-content">
-                        <h3>✅ MEDICATION VERIFIED</h3>
-                        <p>Safe to administer - All safety checks passed</p>
-                      </div>
-                    </div>
-                    
-                    <div class="medication-details">
-                      <h4>Verified Medication Details</h4>
-                      <div class="detail-grid">
-                        <div class="detail-item">
-                          <span class="label">Description:</span>
-                          <span class="value">{{ verificationResult.instruction.description }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="label">Barcode:</span>
-                          <span class="value">{{ verificationResult.instruction.barcode }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="label">Status:</span>
-                          <span class="value" :class="verificationResult.instruction.status.toLowerCase()">
-                            {{ verificationResult.instruction.status === 'Completed' ? 'Already Administered' : 'Ready to Administer' }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+            <!-- Scanned Result -->
+            <div v-else class="success-mode-compact">
+              <!-- Success Animation -->
+              <div class="success-animation-wrapper-compact">
+                <div class="success-circle-bg">
+                  <svg class="success-checkmark" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="45" class="circle-outline"/>
+                    <path d="M 30 50 L 45 65 L 70 40" class="checkmark-path" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="success-pulses">
+                  <span class="pulse pulse-1"></span>
+                  <span class="pulse pulse-2"></span>
+                  <span class="pulse pulse-3"></span>
+                </div>
+              </div>
 
-                    <div class="action-buttons success">
-                      <button 
-                        v-if="verificationResult.instruction.status !== 'Completed'" 
-                        class="btn-primary-action" 
-                        @click="markAsCompleted"
-                      >
-                        <i class="bi bi-check-square"></i>
-                        Confirm Administration
-                      </button>
-                      
-                      <button class="btn-secondary-action" @click="scanNextMedication">
-                        <i class="bi bi-plus-circle"></i>
-                        Scan Next Medication
-                      </button>
-                    </div>
+              <!-- Result Info -->
+              <div class="result-info-compact">
+                <h2 class="result-title">✓ Σκανάρθηκε!</h2>
+                <p class="result-subtitle">Επαλήθευση...</p>
+
+                <!-- Medication Info Card -->
+                <div class="barcode-card-compact">
+                  <div class="barcode-icon-wrapper">
+                    <i class="bi bi-capsule-pill"></i>
                   </div>
-
-                  <!-- Error Result -->
-                  <div v-else class="result-error">
-                    <div class="error-header">
-                      <div class="error-icon">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                      </div>
-                      <div class="error-content">
-                        <h3>❌ SAFETY ALERT</h3>
-                        <p>{{ verificationResult.message }}</p>
-                      </div>
-                    </div>
-                    
-                    <div class="safety-protocol">
-                      <h4>🚨 Safety Protocol</h4>
-                      <ul class="protocol-list">
-                        <li><strong>DO NOT</strong> administer this medication</li>
-                        <li>Verify patient identity again</li>
-                        <li>Check medication prescription</li>
-                        <li>Consult supervising physician</li>
-                      </ul>
-                    </div>
+                  <div class="barcode-info">
+                    <div class="barcode-label">Κωδικός</div>
+                    <div class="barcode-value">{{ scannedBarcode }}</div>
                   </div>
                 </div>
 
-                <!-- Error Messages -->
-                <div v-if="error" class="error-section">
-                  <div class="error-alert">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <span>{{ error }}</span>
+                <!-- AI Verification Loading -->
+                <div class="loading-progress-wrapper-compact">
+                  <div class="progress-bar">
+                    <div class="progress-fill"></div>
                   </div>
+                  <div class="loading-text-compact">AI...</div>
                 </div>
 
-                <!-- Action Bar -->
-                <div class="action-bar">
-                  <button class="btn-restart" @click="startOver">
-                    <i class="bi bi-arrow-clockwise"></i>
-                    New Process
-                  </button>
-                </div>
+                <!-- Rescan Button -->
+                <button class="btn-rescan-compact" @click="clearBarcode">
+                  <i class="bi bi-arrow-clockwise"></i>
+                  Ξανά
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- Verification Result Modal/Alert - Below Scanner -->
+      <div v-if="verificationResult" class="verification-result-section">
+        <!-- SUCCESS: Correct Medication -->
+        <div v-if="verificationResult.success && verificationResult.verified" class="result-success-container">
+          <div class="result-success-header">
+            <i class="bi bi-check-circle-fill"></i>
+            <h3>✅ Φάρμακο Επαληθευμένο</h3>
+          </div>
+          
+          <div class="result-details">
+            <p class="result-description">Το φάρμακο είναι σωστό για αυτόν τον ασθενή</p>
+            
+            <div class="medication-details-box">
+              <div class="detail-row">
+                <span class="detail-label">Περιγραφή:</span>
+                <span class="detail-value">{{ verificationResult.instruction.description }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Barcode:</span>
+                <span class="detail-value">{{ verificationResult.instruction.barcode }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Κατάσταση:</span>
+                <span class="detail-value">
+                  <span class="status-badge-small" :class="verificationResult.instruction.status.toLowerCase()">
+                    {{ verificationResult.instruction.status === 'Completed' ? 'Χορηγήθηκε' : 'Εκκρεμή' }}
+                  </span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="result-actions">
+              <button v-if="verificationResult.instruction.status !== 'Completed'" class="btn-action btn-confirm" @click="markAsCompleted">
+                <i class="bi bi-check-square"></i>
+                Επιβεβαίωση Χορήγησης
+              </button>
+              <button class="btn-action btn-next" @click="scanNextMedication">
+                <i class="bi bi-arrow-right"></i>
+                Επόμενο Φάρμακο
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ERROR: Wrong Medication or Safety Issue -->
+        <div v-else class="result-error-container" :class="'severity-' + verificationResult.severity">
+          <div class="result-error-header">
+            <i :class="getAlertIcon(verificationResult.alertType)"></i>
+            <h3>{{ verificationResult.message }}</h3>
+          </div>
+          
+          <div class="result-details">
+            <p class="result-description">{{ verificationResult.details }}</p>
+            
+            <div class="safety-warnings">
+              <p><strong>⚠️ Προειδοποίηση:</strong> Ελέγξτε την ασθένεια πριν να συνεχίσετε</p>
+            </div>
+
+            <!-- Retry Button -->
+            <button class="btn-action btn-retry" @click="clearBarcode">
+              <i class="bi bi-arrow-clockwise"></i>
+              Δοκιμή Ξανά
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div v-if="error" class="error-banner">
+        <i class="bi bi-exclamation-circle"></i>
+        <span>{{ error }}</span>
+      </div>
     </div>
+
   </div>
 
   <!-- Verification Result Modal -->
@@ -1553,9 +1392,12 @@ export default {
 <style scoped>
 /* Main Container */
 .medication-safety-container {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Hero Section */
@@ -1755,8 +1597,9 @@ export default {
 /* Advanced Steps Section */
 .steps-section {
   background: white;
-  padding: 3rem 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  padding: 1.5rem 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
 .advanced-stepper {
@@ -1770,10 +1613,10 @@ export default {
 
 .step-progress-bar {
   position: absolute;
-  top: 30px;
+  top: 25px;
   left: 50px;
   right: 50px;
-  height: 3px;
+  height: 2px;
   background: #e2e8f0;
   z-index: 1;
 }
@@ -1796,8 +1639,8 @@ export default {
 }
 
 .step-circle {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: #e2e8f0;
   display: flex;
@@ -1805,12 +1648,12 @@ export default {
   justify-content: center;
   position: relative;
   transition: all 0.3s ease;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .step-inner {
-  width: 40px;
-  height: 40px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   background: #64748b;
   color: white;
@@ -1818,7 +1661,7 @@ export default {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
@@ -1870,66 +1713,510 @@ export default {
 }
 
 .step-title {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .step-description {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #64748b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .step-info {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: #2563eb;
   font-weight: 500;
   background: rgba(37, 99, 235, 0.1);
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 15px;
   display: inline-block;
 }
 
 /* Main Content Section */
 .main-content {
-  padding: 3rem 0;
+  flex: 1;
+  overflow: hidden;
+  padding: 1.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Step 2 Two-Column Layout */
+.main-content.step2-layout {
+  flex-direction: column;
+  padding: 0;
+  align-items: stretch;
+}
+
+.step2-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  flex: 1;
+  padding: 1.5rem;
+  overflow: hidden;
+  background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 50%, #f8faff 100%);
+}
+
+/* Left Column: Medical Instructions */
+.step2-left-column {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.instructions-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1rem;
+}
+
+.patient-summary-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
+  border: 1px solid rgba(30, 64, 175, 0.15);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.summary-patient-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.summary-patient-info {
+  flex: 1;
+}
+
+.summary-patient-info h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e1b4b;
+}
+
+.summary-patient-info p {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+/* Medications List */
+.medications-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.08);
+}
+
+.medications-title {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.medications-title i {
+  color: #2563eb;
+}
+
+.instructions-scroll {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+}
+
+.instructions-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.instructions-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.instructions-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.instructions-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.instruction-card {
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.instruction-card:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.instruction-card.completed {
+  opacity: 0.6;
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+
+.instruction-status {
+  margin-bottom: 0.5rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.completed {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.instruction-details {
+  font-size: 0.85rem;
+}
+
+.medication-name {
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.detail-row {
+  display: flex;
+  gap: 0.5rem;
+  margin: 0.3rem 0;
+  font-size: 0.8rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.detail-value {
+  color: #334155;
+  flex: 1;
+  word-break: break-word;
+}
+
+.barcode-value {
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.instruction-description {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+  font-size: 0.75rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.no-medications {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94a3b8;
+  gap: 0.5rem;
+}
+
+.no-medications i {
+  font-size: 2rem;
+  opacity: 0.5;
+}
+
+.no-medications p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Right Column: Scanner */
+.step2-right-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scanner-wrapper-compact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1f3a 0%, #0f1420 100%);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.scanning-mode-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.scanner-frame-pro-compact {
+  position: relative;
+  width: 100%;
+  height: 60%;
+  background: linear-gradient(135deg, #1a1f3a 0%, #0f1420 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.scanner-status-area-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.tips-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.tip-item-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.6rem;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.tip-item-compact i {
+  font-size: 1.25rem;
+  color: #22c55e;
+}
+
+.success-mode-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.success-animation-wrapper-compact {
+  position: relative;
+  width: 100px;
+  height: 100px;
+}
+
+.result-info-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.result-info-compact h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.result-info-compact p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+
+.barcode-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.barcode-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(34, 197, 94, 0.2);
+  border-radius: 6px;
+  color: #22c55e;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.barcode-info {
+  flex: 1;
+}
+
+.barcode-label {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+.barcode-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: white;
+  font-family: monospace;
+}
+
+.loading-progress-wrapper-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.loading-text-compact {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.btn-rescan-compact {
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  border: none;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-rescan-compact:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .step2-two-column {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .step2-two-column {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .step2-left-column {
+    max-height: 50vh;
+  }
+
+  .step2-right-column {
+    min-height: 50vh;
+  }
 }
 
 .selection-card {
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
 .card-header-modern {
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 2rem;
+  padding: 1.25rem 1.5rem;
   border-bottom: 2px solid #e2e8f0;
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .header-icon {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   background: linear-gradient(135deg, #2563eb, #1e40af);
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: white;
 }
 
 .header-text h2 {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0;
@@ -1938,7 +2225,7 @@ export default {
 .header-text p {
   color: #64748b;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
 }
 
 .header-badge {
@@ -1955,18 +2242,20 @@ export default {
 }
 
 .card-body-modern {
-  padding: 2rem;
+  padding: 1.25rem 1.5rem;
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
 }
 
 /* Search Section */
 .search-section {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .search-wrapper {
   background: #f8fafc;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem;
   border: 2px solid #e2e8f0;
 }
 
@@ -2027,107 +2316,1886 @@ export default {
   border-color: #2563eb;
 }
 
-/* Patient Scanner Section in Step 1 */
-.patient-scanner-section {
-  margin: 2rem 0;
+/* ============================================
+   STEP 1: PROFESSIONAL HOSPITAL SCANNER GUI
+   ============================================ */
+
+.scanner-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f0f4ff 0%, #ffffff 50%, #f8faff 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-.scanner-card {
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-  border: 2px solid #bae6fd;
-  border-radius: 16px;
+/* Professional Header Section */
+.scanner-pro-header {
+  position: relative;
+  padding: 2rem 1.5rem 1.5rem;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  color: white;
+  text-align: center;
+  overflow: hidden;
+}
+
+.header-glow {
+  position: absolute;
+  top: -50%;
+  left: -20%;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header-content {
+  position: relative;
+  z-index: 2;
+}
+
+.header-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(255,255,255,0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(10px);
+}
+
+.step-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.scanner-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.scanner-subtitle {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Main Scanner Area */
+.scanner-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 1.5rem;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1);
+  overflow: hidden;
 }
 
-.scanner-header-simple {
+/* Scanning Mode */
+.scanning-mode {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+/* Premium Scanner Frame */
+.scanner-frame-pro {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #1a1f3a 0%, #0f1420 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 
+    0 20px 60px rgba(0,0,0,0.3),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.scanner-overlay-pro {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Animated Scan Line */
+.scan-line-pro {
+  position: absolute;
+  left: 5%;
+  width: 90%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(34, 197, 94, 0.3) 25%,
+    rgba(34, 197, 94, 1) 50%,
+    rgba(34, 197, 94, 0.3) 75%,
+    transparent 100%);
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  animation: scan-sweep 2.5s ease-in-out infinite;
+}
+
+@keyframes scan-sweep {
+  0%, 100% {
+    top: 10%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 90%;
+    opacity: 0;
+  }
+}
+
+/* Corner Markers */
+.corners-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.corner-marker {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+}
+
+.corner-marker.corner-tl {
+  top: 12%;
+  left: 12%;
+}
+
+.corner-marker.corner-tr {
+  top: 12%;
+  right: 12%;
+}
+
+.corner-marker.corner-bl {
+  bottom: 12%;
+  left: 12%;
+}
+
+.corner-marker.corner-br {
+  bottom: 12%;
+  right: 12%;
+}
+
+.corner-line {
+  position: absolute;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 1), rgba(34, 197, 94, 0.4));
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.6);
+  animation: corner-glow 2.5s ease-in-out infinite;
+}
+
+.corner-line.h {
+  width: 100%;
+  height: 3px;
+}
+
+.corner-line.v {
+  width: 3px;
+  height: 100%;
+}
+
+.corner-marker.corner-tl .corner-line.h {
+  top: 0;
+  left: 0;
+}
+
+.corner-marker.corner-tl .corner-line.v {
+  top: 0;
+  left: 0;
+}
+
+.corner-marker.corner-tr .corner-line.h {
+  top: 0;
+  right: 0;
+}
+
+.corner-marker.corner-tr .corner-line.v {
+  top: 0;
+  right: 0;
+}
+
+.corner-marker.corner-bl .corner-line.h {
+  bottom: 0;
+  left: 0;
+}
+
+.corner-marker.corner-bl .corner-line.v {
+  bottom: 0;
+  left: 0;
+}
+
+.corner-marker.corner-br .corner-line.h {
+  bottom: 0;
+  right: 0;
+}
+
+.corner-marker.corner-br .corner-line.v {
+  bottom: 0;
+  right: 0;
+}
+
+@keyframes corner-glow {
+  0%, 100% {
+    opacity: 0.5;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  }
+}
+
+/* Focus Circle */
+.focus-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(34, 197, 94, 0.4);
+  border-radius: 50%;
+  animation: focus-breathe 2s ease-in-out infinite;
+}
+
+.focus-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: rgba(34, 197, 94, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+}
+
+@keyframes focus-breathe {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    border-color: rgba(34, 197, 94, 0.8);
+  }
+}
+
+/* Status & Tips Area */
+.scanner-status-area {
+  width: 100%;
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: fade-in 0.6s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.5rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+  border: 1.5px solid rgba(34, 197, 94, 0.3);
+  border-radius: 16px;
+  margin: 0 auto;
+  backdrop-filter: blur(10px);
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  background: #22c55e;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+  animation: pulse-indicator 2s ease-in-out infinite;
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}
+
+.status-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+/* Tips Grid */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.tip-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0.03));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tip-item:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-4px);
+}
+
+.tip-icon-box {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.tip-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #334155;
+  text-align: center;
+}
+
+/* Patient Summary Card - Step 2 */
+.patient-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
+  border: 1px solid rgba(30, 64, 175, 0.15);
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.08);
+}
+
+.summary-patient-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border-radius: 50%;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
+.summary-patient-info {
+  flex: 1;
+}
+
+.summary-patient-info h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e1b4b;
+}
+
+.summary-patient-info p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.summary-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.75rem;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  color: #16a34a;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.summary-badge i {
+  font-size: 0.9rem;
+}
+
+/* Back Button */
+.btn-back-pro {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  padding: 0.6rem 1rem;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.btn-back-pro:hover {
+  background: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.5);
+  transform: translateX(-2px);
+}
+
+/* Verification Result Section - Below Scanner */
+.verification-result-section {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 400px);
+}
+
+/* Success Result Container */
+.result-success-container {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(34, 197, 94, 0.04) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
   margin-bottom: 1rem;
-  color: #0369a1;
+}
+
+.result-success-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: #16a34a;
   font-weight: 600;
 }
 
-.scanner-header-simple h4 {
+.result-success-header i {
+  font-size: 1.5rem;
+}
+
+.result-success-header h3 {
   margin: 0;
   font-size: 1.1rem;
 }
 
-.scanner-body-simple {
-  background: white;
-  border-radius: 12px;
-  padding: 1rem;
-  min-height: 100px;
+.result-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
-.scanner-active-simple {
+.result-description {
+  margin: 0;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+/* Medication Details Box */
+.medication-details-box {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(30, 64, 175, 0.1);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e2e8f0;
+  gap: 1rem;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #475569;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.detail-value {
+  color: #1e293b;
+  font-size: 0.9rem;
+  text-align: right;
+  flex: 1;
+}
+
+.status-badge-small {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status-badge-small.completed {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge-small.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Result Actions */
+.result-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  padding: 0.7rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+}
+
+.btn-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
+}
+
+.btn-next {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+}
+
+.btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3);
+}
+
+.btn-retry {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.btn-retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+}
+
+/* Error Result Container */
+.result-error-container {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.result-error-container.severity-CRITICAL {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 100%);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.result-error-container.severity-HIGH {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.06) 100%);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.result-error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.result-error-header i {
+  font-size: 1.5rem;
+}
+
+.result-error-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.safety-warnings {
+  background: rgba(245, 158, 11, 0.1);
+  border-left: 3px solid #f59e0b;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: #92400e;
+}
+
+.safety-warnings p {
+  margin: 0;
+}
+
+/* Success Mode */
+.success-mode {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  animation: success-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes success-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.success-animation-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.success-circle-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+}
+
+.success-checkmark {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 10px 30px rgba(34, 197, 94, 0.4));
+}
+
+.circle-outline {
+  fill: none;
+  stroke: #22c55e;
+  stroke-width: 3;
+  animation: circle-draw 0.6s ease-out forwards;
+}
+
+.checkmark-path {
+  stroke: #22c55e;
+  stroke-width: 4;
+  animation: checkmark-draw 0.5s ease-out 0.4s forwards;
+}
+
+@keyframes circle-draw {
+  from {
+    stroke-dasharray: 282;
+    stroke-dashoffset: 282;
+  }
+  to {
+    stroke-dasharray: 282;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes checkmark-draw {
+  from {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 0;
+  }
+}
+
+.success-pulses {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 140px;
+  height: 140px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 50%;
+  animation: pulse-expand 2s ease-out infinite;
+}
+
+.pulse.pulse-1 {
+  animation-delay: 0s;
+}
+
+.pulse.pulse-2 {
+  animation-delay: 0.4s;
+}
+
+.pulse.pulse-3 {
+  animation-delay: 0.8s;
+}
+
+@keyframes pulse-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Result Info */
+.result-info {
+  text-align: center;
+  animation: slide-up 0.5s ease-out 0.3s both;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.result-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.35rem;
+}
+
+.result-subtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 1.25rem;
+}
+
+/* Barcode Info Card */
+.barcode-card {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(34, 197, 94, 0.08));
+  border: 1.5px solid rgba(37, 99, 235, 0.2);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.barcode-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.barcode-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.barcode-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.barcode-value {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* Loading Progress */
+.loading-progress-wrapper {
+  width: 100%;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2563eb, #10b981);
+  background-size: 200% 100%;
+  animation: progress-flow 1.5s ease-in-out infinite;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+}
+
+@keyframes progress-flow {
+  0% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
+  50% {
+    width: 70%;
+  }
+  100% {
+    width: 100%;
+    background-position: 100% 50%;
+  }
+}
+
+.loading-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #2563eb;
+  border-radius: 50%;
+  animation: dot-bounce 1.4s ease-in-out infinite;
+}
+
+.dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Rescan Button */
+.btn-rescan-pro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 2rem;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.btn-rescan-pro:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+}
+
+.btn-rescan-pro:active {
+  transform: translateY(-1px);
+}
+
+.scanner-header {
+  background: linear-gradient(135deg, 
+    var(--primary-color) 0%, 
+    var(--primary-dark) 100%);
+  padding: 1.5rem 1.5rem 1.25rem;
+  text-align: center;
+  color: white;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanner-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.1), transparent);
+  pointer-events: none;
+}
+
+.scanner-header-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  font-size: 1.85rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+.scanner-header h2 {
+  font-size: 1.45rem;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.5px;
+}
+
+.scanner-header p {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  margin: 0;
+}
+
+.scanner-body {
+  padding: 1.75rem 1.5rem;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: linear-gradient(to bottom, var(--bg-primary), rgba(59, 130, 246, 0.03));
+}
+
+/* Scanner Container */
+.scanner-container {
+  max-width: 600px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.scanner-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.scan-line {
+  position: absolute;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(16, 185, 129, 0.3) 15%,
+    rgba(16, 185, 129, 1) 50%,
+    rgba(16, 185, 129, 0.3) 85%,
+    transparent 100%);
+  box-shadow: 
+    0 0 15px rgba(16, 185, 129, 0.8),
+    0 0 30px rgba(16, 185, 129, 0.4);
+  animation: scan-move 2.2s ease-in-out infinite;
+  filter: blur(0.5px);
+}
+
+@keyframes scan-move {
+  0%, 100% {
+    top: 15%;
+    opacity: 0;
+  }
+  50% {
+    top: 85%;
+    opacity: 1;
+  }
+}
+
+.scan-corners {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.corner {
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  border: 2.5px solid transparent;
+  background: linear-gradient(135deg, #10b981, #10b981) padding-box,
+              linear-gradient(135deg, #10b981, rgba(16, 185, 129, 0.3)) border-box;
+}
+
+.corner.tl {
+  top: 10%;
+  left: 10%;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 6px 0 0 0;
+  box-shadow: -2px -2px 15px rgba(16, 185, 129, 0.3);
+}
+
+.corner.tr {
+  top: 10%;
+  right: 10%;
+  border-left: none;
+  border-bottom: none;
+  border-radius: 0 6px 0 0;
+  box-shadow: 2px -2px 15px rgba(16, 185, 129, 0.3);
+}
+
+.corner.bl {
+  bottom: 10%;
+  left: 10%;
+  border-right: none;
+  border-top: none;
+  border-radius: 0 0 0 6px;
+  box-shadow: -2px 2px 15px rgba(16, 185, 129, 0.3);
+}
+
+.corner.br {
+  bottom: 10%;
+  right: 10%;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 6px 0;
+  box-shadow: 2px 2px 15px rgba(16, 185, 129, 0.3);
+}
+
+/* Scanner Tips */
+.scanner-tips {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+  background: rgba(59, 130, 246, 0.05);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 95px;
+}
+
+.tip i {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3));
+}
+
+.tip span {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 500;
+}
+
+.corner.tl {
+  top: 10%;
+  left: 10%;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 4px 0 0 0;
+}
+
+.corner.tr {
+  top: 10%;
+  right: 10%;
+  border-left: none;
+  border-bottom: none;
+  border-radius: 0 4px 0 0;
+}
+
+.corner.bl {
+  bottom: 10%;
+  left: 10%;
+  border-right: none;
+  border-top: none;
+  border-radius: 0 0 0 4px;
+}
+
+.corner.br {
+  bottom: 10%;
+  right: 10%;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 4px 0;
+}
+
+/* Scanner Tips */
+.scanner-tips {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.tip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 90px;
+}
+
+.tip i {
+  font-size: 1.35rem;
+  color: var(--primary-color);
+}
+
+.tip span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
   text-align: center;
 }
 
-.scanner-instruction-simple {
-  margin: 1rem 0 0 0;
+/* Success State */
+.scanner-success {
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.success-icon {
+  width: 110px;
+  height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 50%;
+  animation: success-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 
+    0 15px 45px rgba(16, 185, 129, 0.3),
+    0 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+.success-icon i {
+  font-size: 3.2rem;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes success-pop {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.scanner-success h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.barcode-display {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.1) 0%, 
+    rgba(16, 185, 129, 0.1) 100%);
+  padding: 0.85rem 1.5rem;
+  border-radius: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-color);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.btn-rescan {
+  background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  padding: 0.8rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.98rem;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.btn-rescan:hover {
+  background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
+.btn-rescan:active {
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .scanner-card {
+    height: calc(100vh - 180px);
+    border-radius: 16px;
+  }
+  
+  .scanner-header {
+    padding: 1.25rem 1.25rem 1rem;
+  }
+  
+  .scanner-header-icon {
+    width: 56px;
+    height: 56px;
+    font-size: 1.6rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .scanner-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .scanner-header p {
+    font-size: 0.9rem;
+  }
+  
+  .scanner-body {
+    padding: 1.5rem 1.25rem;
+  }
+  
+  .scanner-container {
+    gap: 1rem;
+  }
+  
+  .scanner-frame {
+    border-radius: 14px;
+  }
+  
+  .corner {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .scanner-tips {
+    gap: 1.5rem;
+    padding: 0.85rem;
+  }
+  
+  .tip {
+    min-width: 85px;
+  }
+  
+  .tip i {
+    font-size: 1.35rem;
+  }
+  
+  .tip span {
+    font-size: 0.78rem;
+  }
+  
+  .success-icon {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .success-icon i {
+    font-size: 3rem;
+  }
+  
+  .scanner-success h3 {
+    font-size: 1.3rem;
+  }
+  
+  .barcode-display {
+    font-size: 0.95rem;
+    padding: 0.75rem 1.25rem;
+  }
+  
+  .loading-indicator {
+    font-size: 0.9rem;
+  }
+  
+  .btn-rescan {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .scanner-card {
+    border-radius: 14px;
+    height: calc(100vh - 160px);
+  }
+  
+  .scanner-header {
+    padding: 1rem 1rem 0.85rem;
+  }
+  
+  .scanner-header-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+    margin-bottom: 0.65rem;
+  }
+  
+  .scanner-header h2 {
+    font-size: 1.15rem;
+  }
+  
+  .scanner-header p {
+    font-size: 0.85rem;
+  }
+  
+  .scanner-body {
+    padding: 1.25rem 1rem;
+  }
+  
+  .scanner-container {
+    gap: 0.95rem;
+  }
+  
+  .corner {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .scanner-tips {
+    gap: 1.25rem;
+    padding: 0.8rem;
+  }
+  
+  .tip {
+    min-width: 75px;
+  }
+  
+  .tip i {
+    font-size: 1.25rem;
+  }
+  
+  .tip span {
+    font-size: 0.75rem;
+  }
+  
+  .success-icon {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .success-icon i {
+    font-size: 2.7rem;
+  }
+  
+  .scanner-success h3 {
+    font-size: 1.2rem;
+  }
+  
+  .barcode-display {
+    font-size: 0.9rem;
+    padding: 0.7rem 1.15rem;
+  }
+}
+
+@media (min-height: 900px) {
+  .scanner-card {
+    max-height: 850px;
+  }
+}
+
+@media (max-height: 700px) {
+  .scanner-card {
+    height: calc(100vh - 140px);
+  }
+  
+  .scanner-header {
+    padding: 1rem 1.25rem 0.85rem;
+  }
+  
+  .scanner-header-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .scanner-body {
+    padding: 1.15rem 1.25rem;
+  }
+  
+  .scanner-container {
+    gap: 1rem;
+  }
+}
+
+@media (min-height: 900px) {
+  .scanner-card {
+    max-height: 850px;
+  }
+}
+
+@media (max-height: 700px) {
+  .scanner-card {
+    height: calc(100vh - 140px);
+  }
+  
+  .scanner-header {
+    padding: 1rem 1.25rem 0.85rem;
+  }
+  
+  .scanner-header-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 1.5rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .scanner-body {
+    padding: 1.15rem 1.25rem;
+  }
+  
+  .scanner-container {
+    gap: 1rem;
+  }
+}
+
+/* Old styles fallback */
+.patient-scanner-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 380px);
+  padding: 2rem 0;
+}
+
+.scanner-area-large {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.scanner-frame-large {
+  position: relative;
+  background: #000;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  margin-bottom: 2rem;
+  aspect-ratio: 4/3;
+}
+
+.scan-overlay-large {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.scan-line-large {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, transparent);
+  box-shadow: 0 0 10px #10b981;
+  animation: scan-line-large 2s ease-in-out infinite;
+}
+
+@keyframes scan-line-large {
+  0%, 100% { transform: translateY(-50px); opacity: 0; }
+  50% { transform: translateY(50px); opacity: 1; }
+}
+
+.corner-large {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 3px solid #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+}
+
+.corner-tl {
+  top: 15%;
+  left: 15%;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 8px;
+}
+
+.corner-tr {
+  top: 15%;
+  right: 15%;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 8px;
+}
+
+.corner-bl {
+  bottom: 15%;
+  left: 15%;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 8px;
+}
+
+.corner-br {
+  bottom: 15%;
+  right: 15%;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 8px;
+}
+
+.scanner-instructions {
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.instruction-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: white;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+}
+
+.scanner-instructions h4 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.5rem;
+}
+
+.scanner-instructions p {
   color: #64748b;
-  font-size: 0.875rem;
+  margin-bottom: 2rem;
+}
+
+.instruction-items {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.instruction-item i {
+  font-size: 1.2rem;
+}
+
+/* Patient Scanned Result */
+.patient-scanned-result {
+  text-align: center;
+  padding: 3rem 2rem;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.success-icon {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+}
+
+.success-circle {
+  width: 120px;
+  height: 120px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: white;
+  box-shadow: 0 20px 50px rgba(16, 185, 129, 0.4);
+  animation: scaleIn 0.5s ease;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.success-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 3px solid #10b981;
+  border-radius: 50%;
+  animation: pulse-ring 2s infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+.patient-scanned-result h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.scanned-barcode {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  color: #0369a1;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  border: 2px solid #bae6fd;
+}
+
+.loading-text {
+  color: #64748b;
+  font-size: 1rem;
+  margin-bottom: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
 }
 
-.scanner-result-simple {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  border-radius: 8px;
-}
-
-.scanner-result-simple i {
-  font-size: 1.5rem;
-}
-
-.scanner-result-simple span {
-  flex: 1;
-  color: #065f46;
+.btn-rescan-patient {
+  background: transparent;
+  border: 2px solid #e2e8f0;
+  color: #64748b;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
   font-weight: 600;
-}
-
-.btn-clear-simple {
-  background: white;
-  border: 2px solid #10b981;
-  color: #10b981;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.btn-clear-simple:hover {
-  background: #10b981;
-  color: white;
-  transform: rotate(90deg);
+.btn-rescan-patient:hover {
+  background: #f8fafc;
+  border-color: #2563eb;
+  color: #2563eb;
+  transform: translateY(-2px);
 }
 
 /* Patients Grid */
 .patients-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+  max-height: calc(100vh - 380px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
 }
 
 .patient-card-modern {
   background: white;
   border: 2px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -2160,14 +4228,14 @@ export default {
 }
 
 .patient-avatar {
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-  border-radius: 16px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #64748b;
   position: relative;
   overflow: hidden;
@@ -2183,7 +4251,7 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 12px;
   display: block;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
@@ -2198,8 +4266,8 @@ export default {
   position: absolute;
   bottom: -2px;
   right: -2px;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   background: #10b981;
   border: 2px solid white;
   border-radius: 50%;
@@ -2211,10 +4279,10 @@ export default {
 }
 
 .patient-name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #1e293b;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .patient-details {
@@ -2508,8 +4576,8 @@ export default {
 /* Step 2: Advanced Scanning Styles */
 .scanning-card {
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
@@ -2525,12 +4593,12 @@ export default {
 
 .scan-pulse {
   position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
+  top: -8px;
+  left: -8px;
+  right: -8px;
+  bottom: -8px;
   border: 2px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
+  border-radius: 12px;
   animation: scan-pulse 2s infinite;
 }
 
@@ -2538,14 +4606,15 @@ export default {
   background: rgba(255, 255, 255, 0.2);
   border: 2px solid rgba(255, 255, 255, 0.3);
   color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   font-weight: 500;
+  font-size: 0.85rem;
 }
 
 .btn-back:hover {
@@ -2557,12 +4626,12 @@ export default {
 .patient-banner {
   background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   color: white;
-  padding: 2rem;
-  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
   position: relative;
   overflow: hidden;
 }
@@ -2572,22 +4641,22 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
   border-radius: 50%;
   transform: translate(50%, -50%);
 }
 
 .patient-avatar-large {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: white;
   overflow: hidden;
   position: relative;
@@ -2596,7 +4665,7 @@ export default {
 
 .patient-avatar-large.has-image {
   background: transparent;
-  border: 3px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   padding: 0;
 }
 
@@ -2604,29 +4673,29 @@ export default {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 17px;
+  border-radius: 10px;
   display: block;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
 
 .patient-details-large h3 {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .patient-meta {
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   opacity: 0.9;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  gap: 0.4rem;
+  font-size: 0.85rem;
 }
 
 .safety-indicator {
@@ -2635,12 +4704,13 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.35rem;
+  font-size: 0.8rem;
 }
 
 .indicator-dot {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #10b981;
   animation: pulse-indicator 2s infinite;
@@ -2648,15 +4718,15 @@ export default {
 
 /* Medications Section */
 .medications-section {
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -2664,6 +4734,7 @@ export default {
   color: #1e293b;
   font-weight: 700;
   margin: 0;
+  font-size: 1.1rem;
 }
 
 .medication-summary {
